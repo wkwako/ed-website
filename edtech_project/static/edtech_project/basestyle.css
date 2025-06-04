@@ -1,0 +1,75 @@
+.body {
+    /* background-image: linear-gradient(to left, rgba(255, 255, 255, 0.5), rgba(255, 255, 255, 0.5)), url("bg1.png"); */
+    /*background-color: rgb(130, 130, 130);*/
+    background-color: #2E1F27;
+    background-size: cover;
+    margin: 0 auto;
+    max-width: 1000px;
+}  
+/* START CODE FROM CHATGPT */
+.navbar {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    width: 100%;
+    min-width: 600px;
+    max-width: 100%;
+    margin: 0 auto;
+    padding: 4px 20px;
+    background-color: #510a30;
+    font-weight: bold;
+    flex-wrap: nowrap;
+    list-style-type: none;
+    gap: 40px;
+    box-sizing: border-box;
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,.5);
+    border-radius: 5px;
+}
+
+.account-management {
+    display: flex;
+    margin-left: auto;
+    gap: 20px;
+    flex-shrink: 0;
+}
+
+/* END CODE FROM CHATGPT */
+
+
+.navbar a {
+    text-decoration: none;
+    color: rgb(226, 219, 228);
+}
+
+.navbar .active {
+    background-color: #008f40;
+    box-shadow: 0 2px 4px 0 rgba(255, 255, 255, 0.1);
+}
+
+.navbar li a {
+    display: block;
+    padding: 8px;
+}
+
+.navbar li {
+    border-right: 2px solid #bbb; /* this line in particular was taken from https://www.w3schools.com/css/css_navbar_horizontal.asp */
+    border-left: 2px solid #bbb;
+    letter-spacing: 1px;
+}
+
+.navbar li:hover {
+    background-color: #111;
+  }
+
+.navbar li a:hover {
+    background-color: transparent;
+}
+
+#logout-form {
+    display: inline-block;
+    margin: 0;
+}
+
+/* @media only screen and (min-width: 1000px) {
+    #body {margin-right: 30%; margin-left: 30%}
+  } */

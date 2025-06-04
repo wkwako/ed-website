@@ -1,0 +1,19 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+   <head>
+       <title>EdTech log in</title>
+   </head>
+   <body>
+       <h4>Please log in using the given username and password</h4>
+       <form class="login" method="post">
+        <div>
+            {% csrf_token %}
+
+            {{ form.as_p }}
+            <input type="submit" value="Login"/>
+        </div>
+       </form>
+   </body>
+</html>

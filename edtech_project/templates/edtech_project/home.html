@@ -1,0 +1,48 @@
+{% extends 'edtech_project/base.html' %}
+
+{% load static %}
+
+{% block head %}
+    <title>Edtech project</title>
+    <link rel="stylesheet" href="{% static 'edtech_project/style.css' %}">
+{% endblock %}
+
+{% block content %}
+<div class="info-header">
+    <h1> Learn to read Python code through practice problems </h1>
+</div>
+
+<div class="info-body">
+    <p class="info">This website helps you learn how to read code. <br> <p>
+
+    <h2 class="info-sections"> Why? </h2>
+
+    <p class="info">There are many scholarly resources which indicate that students must be able to read code
+                    before they can successfully write code (Lister et al., 2009), but that many students' ability
+                    to read code lags behind their ability to write it (Denny et al., 2008). It often is not directly
+                    taught in CS classes, but is a crucial skill nonetheless. </p>
+
+    <h2 class="info-sections"> How does this website help? </h2>
+
+    <p class="info">This website generates problems that require code comprehension to solve. The Practice section
+        (which you can navigate to via the navigation bar at the top), will allow you to generate problems
+        with varying difficulties. The available difficulties are: <br> <br>
+
+        <strong> Easy</strong>: intended for students in introductory CS classes <br> <br>
+        <strong> Medium</strong>: intended for students at the tail-end of introductory CS classes, or students that
+        have taken a few CS classes <br><br>
+        <strong> Hard</strong>: intended for those proficient in CS, likely around the level of
+        entry-level software developers <br> <br>
+
+        There is overlap in difficulty, so you may see 'Easy' problems that require a little more thinking, or 'Hard'
+        problems that are straightforward to solve. <br> <br>
+
+        Lastly, if you are logged in, you can use the History section to view previously
+        attempted problems. You can create an account by using the link in the navigation bar at the top. 
+        Problems only show up on the History page after they are attempted, and only the result of the first
+        attempt is stored. 
+    </p>
+
+</div>
+
+{% endblock %}

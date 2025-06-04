@@ -1,0 +1,11 @@
+-The bash console is where I install Python packages. use 'pip install [package name]' to do this. I use conda for package/virtual environment management locally, but this shouldn't be a problem if package versions remain consistent (there are currently small differences in openai package versions).
+-Python is not installed from bash, it's installed in a 'web app' that pythonanywhere uses.
+-The website needs to be reloaded after each change to the file contents (big green 'reload' button on Dashboard > Web view).
+-I have 2000 seconds worth of CPU usage per day. After a few tests, this is already at 4%. I may need to increase this when testing starts so users don't run into issues calling ChatGPT. I likely want to 
+-The bash console has access to the private GitHub repo (using https and inputting username/pw each time). Git works like normal. So a typical workflow might look like this:
+1. Make local changes to develop branch
+2. Add/commit/push changes to branch
+3. From pythonanywhere bash console, 'git pull origin develop' to get changes. Make sure to cd into CS6460-project first. May need to do 'git reset --hard' first
+4. Reload website (using the reload button)
+
+-Pythonanywhere can only access a hardcoded list of universally whitelisted websites by default. Gatech.github.edu and api.openai.com are not on this list. I needed to sign up for a membership ($5/month) to access these sites. This access is automatic, so there isn't a separate whitelist file that needs to be added for this to work. Note that a new terminal needs to be created for this to take effect.

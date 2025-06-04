@@ -1,0 +1,51 @@
+{% load static %}
+
+<!DOCTYPE html>
+<html>
+    <head>
+        <link rel="stylesheet" href="{% static 'edtech_project/basestyle.css' %}">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Abril+Fatface&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap" rel="stylesheet">
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+        <link rel="preconnect" href="https://fonts.googleapis.com">
+        <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+        <link href="https://fonts.googleapis.com/css2?family=Montserrat:ital,wght@0,100..900;1,100..900&family=Roboto+Flex:opsz,wght@8..144,100..1000&family=Roboto+Slab:wght@100..900&family=Roboto:ital,wght@0,100..900;1,100..900&display=swap" rel="stylesheet">
+        {% block head %}
+        {% endblock %}
+    </head>
+    
+    <!--The 'if' statements below that set the class to 'active' were taken from ChatGPT-->
+    
+    <body class="body" id="body">
+        <div class="navbar">
+            <li> <a href="{% url 'home' %}" class="{% if request.resolver_match.url_name == 'home' %}active{% endif %}" >About</a> </li>
+            <li> <a href="{% url 'practice' %}" class="{% if request.resolver_match.url_name == 'practice' %}active{% endif %}" >Practice</a> </li>
+            
+            {% if user.is_authenticated %}
+            <li> <a href="{% url 'history' %}" class="{% if request.resolver_match.url_name == 'history' %}active{% endif %}" >History</a> </li>
+            {% endif %}
+            
+            <div class="account-management">
+                <li> <a href="{% url 'create_account' %}" class="{% if request.resolver_match.url_name == 'create_account' %}active{% endif %}" id="create-account">Create Account</a> </li>
+                {% if user.is_authenticated %}
+                <li> 
+                    <form action="{% url 'logout' %}" method = "POST" id="logout-form">
+                    {% csrf_token %}
+                    <a href="#" onclick="this.closest('form').submit();" id="logout-button"> Logout </a>
+                    <!-- <button type="submit" id="logout-button"> Logout </button> --> 
+                    </form>
+                </li>
+
+                {% else %}
+                <li> <a href="{% url 'login' %}" class="{% if request.resolver_match.url_name == 'login' %}active{% endif %}">Log in</a></li>
+
+                {% endif %}
+            </div>
+        </div>
+
+            
+        {% block content %}
+        {% endblock %}
+    </body>
+</html>

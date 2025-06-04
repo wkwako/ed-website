@@ -1,0 +1,52 @@
+{% extends 'edtech_project/base.html' %}
+
+{% load static %}
+
+{% block head %}
+    <title>Edtech project</title>
+    <link rel="stylesheet" href="{% static 'edtech_project/style.css' %}">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/styles/atom-one-dark.min.css">
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/highlight.js/11.7.0/highlight.min.js"></script>
+    
+    <!-- START CODE FROM CHATGPT -->
+    <style>
+        /* default background syntax color (matches website background) */
+        pre code.hljs {
+            background: #2E1F27 !important;
+        }
+
+    </style>
+    
+    <script>
+        document.addEventListener('DOMContentLoaded', function () {
+            hljs.highlightAll();
+        });
+    </script>
+
+    <!-- END CODE FROM CHATGPT -->
+{% endblock %}
+
+
+
+{% block content %}
+    <div class="stats">
+        <h3 id="recent-problems-correct"> Recent problems correct: {{num_correct}}/{{num_entries}} </h3>
+    </div>
+
+    {% for entry in history %}
+        <p class="history-info">
+            <strong> Difficulty: </strong> {{entry.difficulty}}, &nbsp;
+            <strong> Problem type: </strong> {{entry.get_problem_type_display}}, &nbsp;
+            <strong> Result: </strong> 
+            <!--START CODE FROM CHATGPT-->
+            <span class="{% if entry.is_correct %}correct-text{% else %}incorrect-text{% endif %}"> 
+                {{ entry.is_correct|yesno:"Correct,Incorrect" }}
+            </span>
+            <!--END CODE FROM CHATGPT-->
+        </p>
+        <pre><code class="language-python" spellcheck="false" and autocomplete="off" onblur="hljs.highlightElement(this);">{{ entry.problem_text }}</code></pre>
+        <hr>
+
+    {% endfor %}
+
+{% endblock %}

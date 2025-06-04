@@ -1,0 +1,239 @@
+#explanation {
+    color: #e6fffb;
+    font-size: 17px;
+    margin: 0;
+    padding: 0;
+}
+
+#hints code {
+    /* START CODE FROM CHATGPT */
+    font-family: 'Courier New', Courier, monospace;
+    /* END CODE FROM CHATGPT */
+    color: #e6fffb;
+}
+
+#user-input-div {
+    margin-left: 0px;
+}
+
+#user-input {
+    margin-left: 3px;
+}
+
+.user-input-line {
+    display: flex;
+    align-items: center;
+    margin-top: 9px;
+    margin-bottom: 9px;
+}
+
+.submit-line {
+    display: flex;
+    align-items: center;
+    margin-top: 9px;
+    margin-bottom: 9px;
+}
+
+#feedback {
+    text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;
+    font-size: 17px;
+    font-weight: bold;
+    line-height: 1;
+    min-height: 1em;
+}
+
+#recent-problems-correct {
+    text-align: right;
+}
+
+.info-header {
+    font-family: Georgia;
+    text-align: center;
+    color: #e6fffb;
+    text-shadow: 1px 0 0 #000, 0 -1px 0 #000, 0 1px 0 #000, -1px 0 0 #000;
+}
+
+.info-sections {
+    font-family: Georgia;
+    color: #e6fffb;
+    text-shadow: 0.5px 0 0 #000, 0 -0.5px 0 #000, 0 0.5px 0 #000, -0.5px 0 0 #000;
+
+}
+
+.info, .stats {
+    font-family: Roboto;
+    font-size: 18px;
+    color: #e6fffb;
+}
+
+.button-difficulty {
+    text-align: center;
+    background: #19003f;
+    color: #dddddd;
+    padding: 8px 12px;
+    margin-right: 8px;
+    font-family: Roboto;
+    letter-spacing: 0.5px;
+    border-radius: 4px;
+}
+
+#hints {
+    font-family: Georgia;
+    color: #e6fffb;
+    text-shadow: 0.2px 0 0 #000, 0 -0.2px 0 #000, 0 0.2px 0 #000, -0.2px 0 0 #000;
+    margin: 0;
+    padding: 0;
+}
+
+#hints-text-div {
+    margin: 0;
+    padding: 0;
+    flex-grow: 1;
+}
+
+#hints-group {
+    display: flex;
+    align-items: flex-start;
+    visibility: hidden;
+}
+/* START CODE FROM CHATGPT */
+#hints-button, #submit-answer, #why-button {
+    text-align: center;
+    background: #19003f;
+    color: #dddddd;
+    padding: 5px 8px;
+    margin-right: 8px;
+    font-family: Roboto;
+    letter-spacing: 0.5px;
+    border-radius: 3px;
+    align-items: center;
+    min-width: 75px;
+    flex-shrink: 0;
+    display: flex;
+    white-space: nowrap;
+    overflow: hidden;
+    width: 80px;
+    justify-content: center;
+}
+/* END CODE FROM CHATGPT */
+
+
+#reset-problem {
+    text-align: center;
+    background: #23003f;
+    color: #dddddd;
+    padding: 5px 8px;
+    margin-right: 8px;
+    font-family: Roboto;
+    letter-spacing: 0.5px;
+    border-radius: 3px;
+    float: right;
+}
+
+
+.button-difficulty:hover, #hints-button:hover, #submit-answer:hover, #reset-problem:hover, #why-button:hover {
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,.5);
+}
+
+.button-difficulty:active, #hints-button:active, #submit-answer:active, #reset-problem:active, #why-button:active {
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,.5);
+    background-color: #140031;
+    border-color: transparent;
+}
+
+.practice-description, .history-info {
+    font-family: Georgia;
+    color: #e6fffb;
+    text-shadow: 0.5px 0 0 #000, 0 -0.5px 0 #000, 0 0.5px 0 #000, -0.5px 0 0 #000;
+}
+
+
+
+.correct-text {
+    color: #5fff5f;
+    font-weight: bold;
+}
+
+.incorrect-text {
+    color: #f74364;
+    font-weight: bold;
+}
+
+#instructions {
+    font-family: Georgia;
+    color: #e6fffb;
+}
+
+#hints-skeleton-loader, #explanation-skeleton-loader {
+    display: none;
+    width: 1000px;
+    height: 50px;
+}
+
+.hints-skeleton, .explanation-skeleton {
+    background-color: #b0b0b08f;
+    width: 80%;
+    height: 25%;
+    margin-top: 5px;
+    border-radius: 4px;
+    animation: blink 0.8s infinite alternate ease-in-out;
+}
+
+.hints-skeleton-short, .explanation-skeleton-short {
+    background-color: #b0b0b08f;
+    width: 60%;
+    height: 25%;
+    margin-top: 5px;
+    border-radius: 4px;
+    animation: blink 0.8s infinite alternate ease-in-out;
+}
+
+#skeleton-loader {
+    display: none;
+}
+
+/* START CODE FROM CHATGPT */
+.skeleton {
+    width: 50%;
+    height: 12px;
+    background-color: #b0b0b08f;
+    animation: blink 0.8s infinite alternate ease-in-out;
+    border-radius: 4px;
+    margin-left: 50px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}
+
+
+@keyframes blink {
+    0% {
+        /* background-position: 200% 0; */
+        background-color: #b0b0b08f;
+    }
+    100% {
+        /* background-position: -200% 0; */
+        background-color: #e0e0e0;
+    }
+}
+
+/* END CODE FROM CHATGPT */
+
+.first-skeleton {
+    width: 50%;
+    height: 12px;
+    background-color: #e0e0e0;
+    animation: blink 0.8s infinite alternate ease-in-out;
+    border-radius: 4px;
+    margin: 5px 0;
+}
+
+.indented-skeleton {
+    width: 50%;
+    height: 12px;
+    background-color: #e0e0e0;
+    animation: blink 0.8s infinite alternate ease-in-out;
+    border-radius: 4px;
+    margin-left: 100px;
+    margin-top: 5px;
+    margin-bottom: 5px;
+}

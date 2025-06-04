@@ -1,0 +1,21 @@
+{% extends 'edtech_project/base.html' %}
+
+{% load static %}
+
+{% block head %}
+    <title>Edtech project</title>
+    <link rel="stylesheet" href="{% static 'edtech_project/style.css' %}">
+    <link rel="stylesheet" href="{% static 'edtech_project/create_account_style.css' %}">
+{% endblock %}
+
+{% block content %}
+
+<h2>Create a new account</h2>
+
+<form method="POST">
+    {% csrf_token %}
+    {{ form }}
+    <button type="submit">Create account </button>
+</form>
+
+{% endblock %}
