@@ -276,6 +276,7 @@ def check_answer_drag_and_drop(request):
         problem_type = data.get("problem_type", "")
         final_code = data.get("final_code", "")
         correct_answer = data.get("correct_answer", "")
+        current_user = request.user
 
         f = StringIO()
         with redirect_stdout(f):
@@ -284,12 +285,18 @@ def check_answer_drag_and_drop(request):
                 exec(final_code, local_vars, local_vars)
 
             except:
+                #stores the problem in the db
+                utilities.store_in_db(request, current_user, difficultyLevel, final_code, False, problem_type)
                 return JsonResponse({"success": True, "message": "Incorrect"})
             
         output = f.getvalue()
         if output.strip() == correct_answer.strip():
+            #stores the problem in the db
+            utilities.store_in_db(request, current_user, difficultyLevel, final_code, True, problem_type)
             return JsonResponse({"success": True, "message": "Correct!"})
         
+        #stores the problem in the db
+        utilities.store_in_db(request, current_user, difficultyLevel, final_code, True, problem_type)
         return JsonResponse({"success": True, "message": "Correct!"})
 
         # try:
