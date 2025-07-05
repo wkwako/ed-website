@@ -8,6 +8,7 @@ from django.contrib.auth.models import User
 from .models import UserHistory
 import random
 import re
+import hashlib
 
 def validate_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
     """Queries ChatGPT, then validates the result. Output is a tuple of the form (bool, str, str, str), which maps to
@@ -189,8 +190,9 @@ def mix_lines(code,exclusions=[]):
 def store_in_db(request, current_user, difficulty, problem_text, is_user_correct, problem_type):
     """Stores a problem in the user's history if it does not already exist."""
     if request.user.is_authenticated:
-        if not UserHistory.objects.filter(user=current_user, problem_text=problem_text).exists():
-            UserHistory.objects.create(user=current_user, problem_text=problem_text, difficulty=difficulty, is_correct=is_user_correct, problem_type=problem_type)
+        problem_hash = hashlib.sha256(problem_text.encode()).hexdigest()
+        if not UserHistory.objects.filter(user=current_user, problem_hash=problem_hash).exists() and problem_hash:
+            UserHistory.objects.create(user=current_user, problem_text=problem_text, difficulty=difficulty, is_correct=is_user_correct, problem_type=problem_type, problem_hash=problem_hash)
 
 #START CODE FROM CHATGPT
 def normalize_match(match):
