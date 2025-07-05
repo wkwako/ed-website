@@ -35,8 +35,8 @@
 
     {% for entry in history %}
         <p class="history-info">
-            <strong> Difficulty: </strong> {{entry.difficulty}}, &nbsp;
-            <strong> Problem type: </strong> {{entry.get_problem_type_display}}, &nbsp;
+            <strong> Difficulty: </strong> {{entry.difficulty}}, &nbsp; <br>
+            <strong> Problem type: </strong> {{entry.get_problem_type_display}}, &nbsp; <br>
             <strong> Result: </strong> 
             <!--START CODE FROM CHATGPT-->
             <span class="{% if entry.is_correct %}correct-text{% else %}incorrect-text{% endif %}"> 
