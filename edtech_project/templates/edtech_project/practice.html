@@ -36,7 +36,7 @@
 
 <!--START CODE FROM CHATGPT-->
 <script>
-
+    let currentFetchController = null;
     let initial_chatGPTresponse = "";
 
     /** 
@@ -73,7 +73,21 @@
         skeletonLoader.style.display = 'block';
         whyButton.style.display = "none";
         explanation.style.display = "none";
+        userSubmit.style.display = "inline-block";
+        userSubmit.style.visibility = "visible";
+        chatResponseDiv.contentEditable = "false";
+        userInputDiv.style.display = "inline-block";
+        chatResponseDiv.autocomplete = "false";
+        chatResponseDiv.spellcheck = false;
        
+        //START CODE FROM CHATPGT
+        if (currentFetchController) {
+            currentFetchController.abort();  // Cancel previous fetch
+        }
+
+        currentFetchController = new AbortController();
+        //END CODE FROM CHATGPT
+
         //direct to /practice/, see views.py for where this leads
         fetch('/practice/', {
             method: 'POST',
@@ -84,6 +98,7 @@
             },
 
             //sends these variables through to /practice/
+            signal: currentFetchController.signal,
             body: JSON.stringify({
                 message: message,
                 difficulty_level: difficultyLevel
@@ -104,6 +119,21 @@
 
         //we received data
         .then(data => {
+
+            //START CODE FROM CHATGPT
+            let existingSortable = document.getElementById("sortable-code-block");
+            console.log("🕵️‍♂️ existingSortable:", existingSortable);
+            if (existingSortable) {
+                const sortableInstance = Sortable.get(existingSortable);
+                console.log("🕵️‍♂️ sortableInstance:", sortableInstance);
+                if (sortableInstance) {
+                    sortableInstance.destroy();
+                    console.log("✅ Sortable instance destroyed");
+                }
+                existingSortable.remove();
+            }
+            //END CODE FROM CHATGPT
+
             skeletonLoader.style.display = "none";
             userInput.value = "";
             hints.textContent = "";
@@ -118,8 +148,9 @@
                 document.getElementById("correct-answer").value = data.correct_answer;
                 chatResponseDiv.classList.remove("highlight-drag-and-drop");
                 chatResponseDiv.classList.add("highlight-default");
-                userSubmit.style.display = "inline-block";
-                userSubmit.style.visibility = "visible";
+
+                // console.log("✅ Received data:", data);
+                // console.log("🚦 Problem type value:", document.getElementById("problem-type").value);
 
                 //if problem type is "determine_output" (standard)
                 if (document.getElementById("problem-type").value === "determine_output") {
@@ -132,13 +163,10 @@
 
                     //set elements specific to "determine_output" problem type
                     chatResponseDiv.innerHTML = `<p><strong> </strong></p>` + formattedResponse;
-                    userInputDiv.style.display = "inline-block";
                     instructionsDiv.innerHTML = "What printed value shows when the above code is ran? Remember that the 'output' variable is rounded to 3 decimals! Ex: 1.2468 -> 1.247"
                     userInput.setAttribute("required", "true");
-                    chatResponseDiv.contentEditable = "false";
                     userInput.style.display = "inline-block";
                     userInputAnswer.style.display = "inline-block";
-                    resetButton.style.visibility = 'hidden';
 
                     //performs syntax highlighting
                     document.querySelectorAll('pre code').forEach((block) => {
@@ -162,11 +190,8 @@
                     chatResponseDiv.innerHTML = `<p><strong> </strong></p>` + formattedResponse;
                     document.getElementById("initial-response").value = chatResponseDiv.textContent;
                     document.getElementById("initial-response-raw").value = chatResponseDiv.innerHTML;
-                    userInputDiv.style.display = "inline-block";
                     instructionsDiv.innerHTML = "Rename the missing function and variable names to something more appropriate by editing the above code, then submit your answer when complete. Note: small differences in function/variable names are okay; the grader is lenient. Use the 'Reset Problem' button in the upper-right corner if you need to reload the original problem."
                     chatResponseDiv.contentEditable = "true";
-                    chatResponseDiv.spellcheck = false;
-                    chatResponseDiv.autocomplete = "false";
                     userInput.style.display = "none";
                     userInputAnswer.style.display = "none";
                     userInput.removeAttribute("required");
@@ -187,14 +212,13 @@
                     }
 
                 else if (document.getElementById("problem-type").value == "drag_and_drop") {
+
                     //set elements specific to "drag_and_drop" problem type
                     chatResponseDiv.classList.remove("highlight-default");
                     chatResponseDiv.classList.add("highlight-drag-and-drop");
                     instructionsDiv.innerHTML = "Rearrange the above code so it runs correctly by dragging and dropping each line, then click Submit. Small differences in order (declaring variables, for example) do not matter; the grader is lenient.";
-                    userInputDiv.style.display = "inline-block";
                     userInput.style.display = "none";
                     userInputAnswer.style.display = "none";
-                    resetButton.style.visibility = 'hidden';
                     userInput.removeAttribute("required");
 
                     //START CODE FROM CHATGPT
@@ -245,13 +269,23 @@
                         container.appendChild(block);
                     });
 
-                    // Enable SortableJS
-                    Sortable.create(container, {
-                        animation: 150,
-                    });
-
-                    //add div to the container
+                    // Add div to the container
                     chatResponseDiv.appendChild(container);
+
+                    // Use a small timeout to let the DOM update/render
+                    setTimeout(() => {
+                        const sortableTarget = document.querySelector("#sortable-code-block");
+                        
+                        if (!sortableTarget) {
+                            console.warn("Sortable container not found!");
+                            return;
+                        }
+
+                        Sortable.create(sortableTarget, {
+                            animation: 150,
+                        });
+
+                    }, 50);
 
                     // Save original output if needed for answer checking
                     document.getElementById("initial-response").value = data.expected_output || "";
@@ -390,7 +424,7 @@ function submitUserAnswer() {
         }
 
         else if (problemType === "drag_and_drop") {
-            console.log("submit button is being pressed")
+            //console.log("submit button is being pressed")
             //START CODE FROM CHATGPT
             let blocks = document.querySelectorAll('#sortable-code-block .draggable-line code');
             let codeLines = Array.from(blocks).map(code => code.textContent);
