@@ -213,6 +213,8 @@
 
                 else if (document.getElementById("problem-type").value == "drag_and_drop") {
 
+                    
+
                     //set elements specific to "drag_and_drop" problem type
                     chatResponseDiv.classList.remove("highlight-default");
                     chatResponseDiv.classList.add("highlight-drag-and-drop");
@@ -287,9 +289,10 @@
 
                     }, 50);
 
-                    // Save original output if needed for answer checking
-                    document.getElementById("initial-response").value = data.expected_output || "";
                     //END CODE FROM CHATGPT
+
+                    // Save original output if needed for answer checking
+                    document.getElementById("initial-response").value = data.unmixed_lines;
 
                     document.querySelectorAll('.draggable-line pre code').forEach((block) => {
                         hljs.highlightElement(block);
@@ -649,6 +652,7 @@ function generateExplanation() {
 <input type="hidden" id="initial-response" name="initial-response" value="">
 <input type="hidden" id="initial-response-raw" name="initial-response-raw" value="">
 <input type="hidden" id="correct-answer" name="correct-answer" value="">
+
 
 <div class="form-group form-inline" id="user-input-div" style="display: none;">
     <form method="POST" id="user-input-form" onsubmit="event.preventDefault(); submitUserAnswer();">

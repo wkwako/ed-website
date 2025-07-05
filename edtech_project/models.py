@@ -10,3 +10,5 @@ class UserHistory(models.Model):
     timestamp = models.DateTimeField(auto_now_add=True)
     problem_type = models.CharField(max_length=20, default="None", choices=[("determine_output", "Determine output"), ("fill_in_vars", "Rename functions"), ("drag_and_drop", "Drag and drop")])
     problem_hash = models.CharField(max_length=64, db_index=True, default='')
+    #probably don't want to allow null forever here
+    correct_code = models.TextField(null=True, blank=True, default="")

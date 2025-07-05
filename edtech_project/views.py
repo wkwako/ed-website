@@ -13,6 +13,7 @@ import re
 from io import StringIO
 from contextlib import redirect_stdout
 import ast
+import copy
 
 #STUFF TO FIX:
 #TODO: make spacing between task bar items flexible
@@ -56,12 +57,15 @@ def practice(request):
             #print ("attempting validate and query")
             result, chatgpt_text, err, output = utilities.validate_and_query(request, query, temperature, problem_type)
 
+            unmixed_lines = ""
+
             if problem_type == "drag_and_drop":
                 chatgpt_text = chatgpt_text[9:-3]
                 #code_lines = chatgpt_text.split("\n")
                 #print (f'CODE LINES: {code_lines}')
                 #exclusions = utilities.lines_to_exclude(code_lines)
                 #print (f'EXCLUSIONS: {exclusions}')
+                unmixed_lines = copy.deepcopy(chatgpt_text)
                 chatgpt_text = utilities.mix_lines(chatgpt_text)
 
             #code is valid
@@ -76,6 +80,7 @@ def practice(request):
                     "chatgpt_response": chatgpt_text,
                     "problem_type": problem_type,
                     "correct_answer": output,
+                    "unmixed_lines": unmixed_lines,
                     })
             
             #code is not valid
@@ -94,6 +99,13 @@ def practice(request):
 @login_required
 def history(request):
     """Returns the history page, history.html."""
+    #if more data is needed for history.html, here are the steps to do that:
+    # 1. get needed info in a variable accessible in utilities.py
+    # 2. add the field in models.py to UserHistory
+    # 3. add code for storing the data in store_in_db
+    # 4. migrate changes
+    # 5. use the data in history.html
+
     context = {}
     #selects the most recent attempted problems, up to 20.
     user_history = UserHistory.objects.filter(user=request.user).order_by("-timestamp")[:20]
@@ -133,7 +145,7 @@ def check_answer(request):
         problem_text = request.session.get("problem_text", "")[10:-3]
 
         #stores the problem in the db
-        utilities.store_in_db(request, current_user, difficulty, problem_text, is_user_correct, problem_type)
+        utilities.store_in_db(request, current_user, difficulty, problem_text, is_user_correct, problem_type, problem_text)
 
         #user is correct, send 'Correct!' message to frontend
         if is_user_correct:
@@ -257,8 +269,10 @@ def check_answer_fill_in_vars(request):
         reply = utilities.chatgpt_query(query, temperature)
         is_user_correct = reply == "Correct"
 
+        #need to ask chatGPT to generate correct_code
+        correct_code = initial_chatGPTResponse
         current_user = request.user
-        utilities.store_in_db(request, current_user, difficultyLevel, initial_chatGPTResponse, is_user_correct, problem_type)
+        utilities.store_in_db(request, current_user, difficultyLevel, initial_chatGPTResponse, is_user_correct, problem_type, initial_chatGPTResponse)
 
         return JsonResponse({"success": True, "message": reply})
 
@@ -278,6 +292,8 @@ def check_answer_drag_and_drop(request):
         correct_answer = data.get("correct_answer", "")
         current_user = request.user
 
+
+
         f = StringIO()
         with redirect_stdout(f):
             try:
@@ -286,17 +302,17 @@ def check_answer_drag_and_drop(request):
 
             except:
                 #stores the problem in the db
-                utilities.store_in_db(request, current_user, difficultyLevel, final_code, False, problem_type)
+                utilities.store_in_db(request, current_user, difficultyLevel, final_code, False, problem_type, initial_chatGPTResponse)
                 return JsonResponse({"success": True, "message": "Incorrect"})
             
         output = f.getvalue()
         if output.strip() == correct_answer.strip():
             #stores the problem in the db
-            utilities.store_in_db(request, current_user, difficultyLevel, final_code, True, problem_type)
+            utilities.store_in_db(request, current_user, difficultyLevel, final_code, True, problem_type, initial_chatGPTResponse)
             return JsonResponse({"success": True, "message": "Correct!"})
         
         #stores the problem in the db
-        utilities.store_in_db(request, current_user, difficultyLevel, final_code, True, problem_type)
+        utilities.store_in_db(request, current_user, difficultyLevel, final_code, True, problem_type, initial_chatGPTResponse)
         return JsonResponse({"success": True, "message": "Correct!"})
 
         # try:

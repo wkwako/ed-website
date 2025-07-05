@@ -33,18 +33,35 @@
         <h3 id="recent-problems-correct"> Recent problems correct: {{num_correct}}/{{num_entries}} </h3>
     </div>
 
+    <!-- the data is coming from the context variable passed in history() in views.py -->
     {% for entry in history %}
         <p class="history-info">
-            <strong> Difficulty: </strong> {{entry.difficulty}}, &nbsp; <br>
-            <strong> Problem type: </strong> {{entry.get_problem_type_display}}, &nbsp; <br>
+            <strong> Difficulty: </strong> {{entry.difficulty}} &nbsp; <br>
             <strong> Result: </strong> 
             <!--START CODE FROM CHATGPT-->
             <span class="{% if entry.is_correct %}correct-text{% else %}incorrect-text{% endif %}"> 
                 {{ entry.is_correct|yesno:"Correct,Incorrect" }}
-            </span>
+            </span> <br>
+            <strong> Problem type: </strong> {{entry.get_problem_type_display}} &nbsp; <br> <br>
             <!--END CODE FROM CHATGPT-->
+
         </p>
         <pre><code class="language-python" spellcheck="false" and autocomplete="off" onblur="hljs.highlightElement(this);">{{ entry.problem_text }}</code></pre>
+        <br>
+
+        {% if entry.problem_type == "determine_output" %}
+            <strong> Correct answer:  </strong>
+        {% endif %}
+
+        {% if entry.problem_type == "drag_and_drop" and entry.is_correct == False %}
+            <p class="history-info">
+                <strong> Correct code:  </strong>
+            </p>
+            
+            <pre><code class="language-python" spellcheck="false" and autocomplete="off" onblur="hljs.highlightElement(this);">{{ entry.correct_code }}</code></pre>
+            
+        
+        {% endif %}
         <hr>
 
     {% endfor %}

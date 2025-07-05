@@ -141,13 +141,24 @@
     border-color: transparent;
 }
 
-.practice-description, .history-info {
+.practice-description{
     font-family: Georgia;
     color: #e6fffb;
     text-shadow: 0.5px 0 0 #000, 0 -0.5px 0 #000, 0 0.5px 0 #000, -0.5px 0 0 #000;
 }
 
+.history-info {
+    font-family: Georgia;
+    color: #e6fffb;
+    text-shadow: 0.5px 0 0 #000, 0 -0.5px 0 #000, 0 0.5px 0 #000, -0.5px 0 0 #000;
+    margin: auto;
+    padding: auto;
+}
 
+pre, pre code.language-python {
+    margin: 0 !important;
+    padding: 0 !important;
+}
 
 .correct-text {
     color: #5fff5f;
