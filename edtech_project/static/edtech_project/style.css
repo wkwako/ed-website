@@ -171,6 +171,7 @@ pre, pre code.language-python {
 }
 
 #instructions {
+    margin-top: 2%;
     font-family: Georgia;
     color: #e6fffb;
 }
