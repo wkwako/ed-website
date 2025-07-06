@@ -49,10 +49,6 @@
         <pre><code class="language-python" spellcheck="false" and autocomplete="off" onblur="hljs.highlightElement(this);">{{ entry.problem_text }}</code></pre>
         <br>
 
-        {% if entry.problem_type == "determine_output" %}
-            <strong> Correct answer:  </strong>
-        {% endif %}
-
         <!-- If problem is type drag_and_drop and user got it incorrect, display correct answer -->
         {% if entry.problem_type == "drag_and_drop" and entry.is_correct == False %}
             <p class="history-info">
@@ -64,7 +60,7 @@
 
         {% if entry.problem_type == "determine_output" and entry.is_correct == False %}
             <p class="history-info">
-                <strong> Correct answer:  </strong>
+                <strong> Correct answer: {{entry.correct_answer}} </strong>
             </p>
             
         {% endif %}
