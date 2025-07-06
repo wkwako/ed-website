@@ -194,7 +194,7 @@ def store_in_db(request, current_user, difficulty, problem_text, is_user_correct
         if problem_type == "drag_and_drop":
             problem_hash = hashlib.sha256(correct_code.encode()).hexdigest()
         if not UserHistory.objects.filter(user=current_user, problem_hash=problem_hash).exists() and problem_hash:
-            UserHistory.objects.create(user=current_user, problem_text=problem_text, difficulty=difficulty, is_correct=is_user_correct, problem_type=problem_type, problem_hash=problem_hash, correct_code=correct_code)
+            UserHistory.objects.create(user=current_user, problem_text=problem_text, difficulty=difficulty, is_correct=is_user_correct, problem_type=problem_type, problem_hash=problem_hash, correct_answer=correct_code)
 
 #START CODE FROM CHATGPT
 def normalize_match(match):
@@ -306,7 +306,7 @@ def query_fill_in_vars(difficultyLevel):
 def get_query(difficultyLevel) -> tuple[str, str]:
     """Given the difficultyLevel, randomizes the kind of problem received and returns its query.
        Returns a tuple[str,str], where the first string is the problem type and the second is the query."""
-    problem_int = random.randint(3,3) #determines which problems will be generated
+    problem_int = random.randint(1,1) #determines which problems will be generated
     problem_type = ""
     query = ""
 

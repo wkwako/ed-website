@@ -145,7 +145,7 @@ def check_answer(request):
         problem_text = request.session.get("problem_text", "")[10:-3]
 
         #stores the problem in the db
-        utilities.store_in_db(request, current_user, difficulty, problem_text, is_user_correct, problem_type, problem_text)
+        utilities.store_in_db(request, current_user, difficulty, problem_text, is_user_correct, problem_type, correct_answer)
 
         #user is correct, send 'Correct!' message to frontend
         if is_user_correct:

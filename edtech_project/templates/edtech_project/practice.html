@@ -73,10 +73,7 @@
         skeletonLoader.style.display = 'block';
         whyButton.style.display = "none";
         explanation.style.display = "none";
-        userSubmit.style.display = "inline-block";
-        userSubmit.style.visibility = "visible";
         chatResponseDiv.contentEditable = "false";
-        userInputDiv.style.display = "inline-block";
         chatResponseDiv.autocomplete = "false";
         chatResponseDiv.spellcheck = false;
        
@@ -119,6 +116,10 @@
 
         //we received data
         .then(data => {
+
+            userSubmit.style.display = "inline-block";
+            userSubmit.style.visibility = "visible";
+            userInputDiv.style.display = "inline-block";
 
             //START CODE FROM CHATGPT
             let existingSortable = document.getElementById("sortable-code-block");
@@ -212,9 +213,6 @@
                     }
 
                 else if (document.getElementById("problem-type").value == "drag_and_drop") {
-
-                    
-
                     //set elements specific to "drag_and_drop" problem type
                     chatResponseDiv.classList.remove("highlight-default");
                     chatResponseDiv.classList.add("highlight-drag-and-drop");
