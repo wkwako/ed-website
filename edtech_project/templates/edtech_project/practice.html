@@ -37,6 +37,7 @@
 <!--START CODE FROM CHATGPT-->
 <script>
     let currentFetchController = null;
+    let isFetching = false;
     let initial_chatGPTresponse = "";
 
     /** 
@@ -44,6 +45,14 @@
      * Generates a problem for the user to solve.
      */
     function fetchChatGPTResponse(message, difficultyLevel, retries=3, delay=1000) {
+
+        if (isFetching) {
+            console.log("Button press ignored; fetching in progress");
+            return;
+        }
+
+        isFetching = true;
+
         //Define variables for relevant elements
         let chatResponseDiv = document.getElementById('chatgpt-response');
         let userInputDiv = document.getElementById('user-input-div');
@@ -116,6 +125,7 @@
 
         //we received data
         .then(data => {
+            isFetching = false;
 
             userSubmit.style.display = "inline-block";
             userSubmit.style.visibility = "visible";
@@ -310,6 +320,7 @@
         //START CODE FROM CHATGPT
         //there was an error retreiving data
         .catch(error => {
+            isFetching = false;
             if (retries > 0) {
             // Retry with exponential backoff
             console.log(`Retrying... Attempts left: ${retries}`);
