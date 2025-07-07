@@ -36,9 +36,11 @@
 
 <!--START CODE FROM CHATGPT-->
 <script>
-    let currentFetchController = null;
-    let isFetching = false;
+    //let currentFetchController = null;
     let initial_chatGPTresponse = "";
+
+    //debounce logic
+    let isFetching = false;
 
     /** 
      * Called when a user clicks a difficulty button ("Easy", "Medium", "Hard").
@@ -46,6 +48,7 @@
      */
     function fetchChatGPTResponse(message, difficultyLevel, retries=3, delay=1000) {
 
+        //disables problem generation until current request is processed (and shown to user)
         if (isFetching) {
             console.log("Button press ignored; fetching in progress");
             return;
@@ -85,16 +88,8 @@
         chatResponseDiv.contentEditable = "false";
         chatResponseDiv.autocomplete = "false";
         chatResponseDiv.spellcheck = false;
-       
-        //START CODE FROM CHATPGT
-        if (currentFetchController) {
-            currentFetchController.abort();  // Cancel previous fetch
-        }
 
-        currentFetchController = new AbortController();
-        //END CODE FROM CHATGPT
-
-        //direct to /practice/, see views.py for where this leads
+        //direct to /practice/, see urls.py for views.py function call
         fetch('/practice/', {
             method: 'POST',
             headers: {
@@ -103,8 +98,7 @@
                 'X-CSRFToken': '{{ csrf_token }}'
             },
 
-            //sends these variables through to /practice/
-            signal: currentFetchController.signal,
+            //sends these variables to /practice/
             body: JSON.stringify({
                 message: message,
                 difficulty_level: difficultyLevel
@@ -125,6 +119,7 @@
 
         //we received data
         .then(data => {
+            //info sent to user, no longer fetching request
             isFetching = false;
 
             userSubmit.style.display = "inline-block";
@@ -320,6 +315,8 @@
         //START CODE FROM CHATGPT
         //there was an error retreiving data
         .catch(error => {
+
+            //set isFetching to false so we can try again
             isFetching = false;
             if (retries > 0) {
             // Retry with exponential backoff
