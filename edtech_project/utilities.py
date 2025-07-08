@@ -251,7 +251,7 @@ def query_determine_output(difficultyLevel):
 
 def query_fill_in_vars(difficultyLevel):
     """Creates the query for the 'fill_in_vars' problem type."""
-    query = 'I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice reading code. Here are the general specifications: The code must not have any annotations or comments. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. At the end of the code, there should be a line that causes it to output a number or phrase (a student should be able to type its output into a text box for practicing purposes). The output should be limited to 50 characters or fewer, and not more than one line long. It should not be obvious what the code is doing, but it should be decipherable after looking at it for a few minutes. Please store the output of the code in a variable called \'output\', where the last line prints the output variable. Do not include descriptions of the code.'
+    query = 'I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice reading code. Here are the general specifications: The code must not have any annotations, comments, or docstrings. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. At the end of the code, there should be a line that causes it to output a number or phrase (a student should be able to type its output into a text box for practicing purposes). The output should be limited to 50 characters or fewer, and not more than one line long. Please store the output of the code in a variable called \'output\', where the last line prints the output variable. Do not include descriptions of the code.'
 
     #prevent common problems
     if random.randint(1,10) != 10:
@@ -276,7 +276,7 @@ def query_fill_in_vars(difficultyLevel):
     #old code: Additionally, pick two variables at random and call them "unknown1" or something similar. Do not pick variables that simply rename other variables, or are just temporary variables.
     if difficultyLevel == "Easy":
         #subjects = easy_subjects
-        query += ' The code must be between 10 and 15 lines long. Do not use more than one \'for\' loop. Do not use list/dictionary comprehensions. All function names must be called "mystery1", or something similar, so students will not know what they do from name alone.'
+        query += ' The code must be between 10 and 15 lines long. Do not use more than one \'for\' loop. Do not use list/dictionary comprehensions.'
 
     elif difficultyLevel == "Medium":
         #subjects = intermediate_subjects
@@ -306,7 +306,7 @@ def query_fill_in_vars(difficultyLevel):
 def get_query(difficultyLevel) -> tuple[str, str]:
     """Given the difficultyLevel, randomizes the kind of problem received and returns its query.
        Returns a tuple[str,str], where the first string is the problem type and the second is the query."""
-    problem_int = random.randint(1,1) #determines which problems will be generated
+    problem_int = random.randint(2,2) #determines which problems will be generated
     problem_type = ""
     query = ""
 

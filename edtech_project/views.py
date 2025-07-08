@@ -54,12 +54,24 @@ def practice(request):
             request.session["problem_text"] = None
 
             #query chatgpt and validate its response
-            #print ("attempting validate and query")
             result, chatgpt_text, err, output = utilities.validate_and_query(request, query, temperature, problem_type)
 
             unmixed_lines = ""
 
-            if problem_type == "drag_and_drop":
+            if problem_type == "fill_in_vars":
+                insert_at = []
+                code_lines = chatgpt_text.split("\n")
+                print ("starting enumeration across code_lines")
+                for i, item in enumerate(code_lines):
+                    if len(item) >= 4 and item[:4] == "def ":
+                        insert_at.append(i+1)
+                
+                empty_docstring = '    \"\"\" \"\"\"'
+                for i in insert_at[::-1]:
+                    code_lines.insert(i, empty_docstring)
+                chatgpt_text = "\n".join(code_lines)
+
+            elif problem_type == "drag_and_drop":
                 chatgpt_text = chatgpt_text[9:-3]
                 #code_lines = chatgpt_text.split("\n")
                 #print (f'CODE LINES: {code_lines}')
@@ -197,12 +209,38 @@ def safety_checks(user_input, initial_chatGPTResponse):
         #END CODE FROM 'python_user' on stackoverflow: https://stackoverflow.com/questions/67230018/python-checking-its-own-code-before-running-usage-errors
         return False, "Error: infinite loop detected"
     
-    user_lines = len(user_input.split("\n"))
-    initial_lines = len(initial_chatGPTResponse.split("\n"))
+    
 
     #checks for total line difference between user's answer and original problem
-    if user_lines != initial_lines:
-        return False, "Error: total number of lines different than starting number of lines, please edit code"
+    #need to take this line out. instead, find where line differences start and stop. make sure all the new ones are strings
+    
+    #get all lines that are different from original
+    initial_lines = initial_chatGPTResponse.split("\n")
+    user_lines = user_input.split("\n")
+    new_indices = []
+    i = 0
+    j = 0
+    while i < len(initial_lines):
+        if user_lines[i].strip() == initial_lines[i].strip():
+            i += 1
+            j += 1
+        else:
+            new_indices.append(j)
+            j += 1
+
+    #check that all these lines are only strings
+    
+    for idx in new_indices:
+        if type(user_lines[idx]) != str:
+            return False, "Error: non-strings detected in user-modified code."
+
+
+
+
+    # user_lines = len(user_input.split("\n"))
+    # initial_lines = len(initial_chatGPTResponse.split("\n"))
+    # if user_lines != initial_lines:
+    #     return False, "Error: total number of lines different than starting number of lines, please edit code"
 
     return True, "Code passed initial safety checks"
 
@@ -263,7 +301,9 @@ def check_answer_fill_in_vars(request):
             reply = "Error: the code could not be run."
             return JsonResponse({"success": True, "message": reply})
         
-        query = f"I gave a student this block of python code: {initial_chatGPTResponse}. The goal is for them to fill in the functions and variables named 'mystery1' etc. and 'unknown1' etc so that these function and variable names no longer exist. I would like you to analyze how they did. Here is the finished code they submitted: {user_input}. Please grade leniently, but accurately. Please output 'Correct' if the functions and variables are correctly named (i.e. approximating what the function is actually doing), and 'Incorrect' if not. I do not care about the contents of the function. ONLY judge them on these variable names. If the answer is Incorrect, please provide a short hint for the student about what they got wrong, but without explicitely giving them the answer (i.e. telling them what the function does). For example, if a student named all functions correctly but forgot to change the name in function calls, tell them that."
+        #query = f"I gave a student this block of python code: {initial_chatGPTResponse}. The goal is for them to fill in the functions and variables named 'mystery1' etc. and 'unknown1' etc so that these function and variable names no longer exist. I would like you to analyze how they did. Here is the finished code they submitted: {user_input}. Please grade leniently, but accurately. Please output 'Correct' if the functions and variables are correctly named (i.e. approximating what the function is actually doing), and 'Incorrect' if not. I do not care about the contents of the function. ONLY judge them on these variable names. If the answer is Incorrect, please provide a short hint for the student about what they got wrong, but without explicitely giving them the answer (i.e. telling them what the function does). For example, if a student named all functions correctly but forgot to change the name in function calls, tell them that."
+        query = f"I gave a student this block of python code: {initial_chatGPTResponse}. The goal is for them to add docstrings to the code that make sense and adhere to the PEP8 style conventions. I would like you to analyze how they did. Here is the finished code they submitted: {user_input}. Please grade leniently, but accurately. Please output 'Correct' if the docstrings correctly and briefly summarize the function 'Incorrect' if not. I do not care about the contents of the function. ONLY judge them on the docstrings. If the answer is Incorrect, please provide a short hint for the student about what they got wrong, but without explicitely giving them the answer (i.e. telling them what the function does). For example, a docstring of \'validates an array\' is not specific enough, and you should tell them that."
+
         temperature = 1.0
 
         reply = utilities.chatgpt_query(query, temperature)
