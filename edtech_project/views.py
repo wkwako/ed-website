@@ -71,8 +71,13 @@ def practice(request):
                 for i in lines_to_remove[::-1]:
                     del code_lines[i]
 
+                #reform text without hallucinations
                 chatgpt_text = '\n'.join(code_lines)
 
+                #set 'correct answer' as current chatgpt_text
+                output = chatgpt_text
+
+                #remove docstring text, keep triple quotations
                 indices = [m.start() for m in re.finditer('\"\"\"', chatgpt_text)]
                 for i in range(len(indices))[::-2]:
                     start = indices[i-1]
