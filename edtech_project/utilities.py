@@ -33,18 +33,23 @@ def validate_and_query(request, query, temperature, problem_type) -> tuple[bool,
         chatgpt_text = response_data.get("choices", [{}])[0].get("message", {}).get("content", "No response")
 
         #if this is a test input, it succeeds
-        if chatgpt_text[:9] != "```python":
-            return True, chatgpt_text, "", ""
+        # if chatgpt_text[:9] != "```python":
+        #     return True, chatgpt_text, "", ""
+        
+        #store extra data about the problem in the session
+        request.session["problem_text"] = chatgpt_text
 
         #validate the code.
-        result, output = validate(chatgpt_text, problem_type)
+
+        if problem_type == "fill_in_vars":
+            result, output = True, ""
+
+        else:
+            result, output = validate(chatgpt_text, problem_type)
 
         if not result:
             fail_count += 1
             continue
-
-        #store extra data about the problem in the session
-        request.session["problem_text"] = chatgpt_text
 
         return True, chatgpt_text, "", output
 
@@ -251,7 +256,10 @@ def query_determine_output(difficultyLevel):
 
 def query_fill_in_vars(difficultyLevel):
     """Creates the query for the 'fill_in_vars' problem type."""
-    query = 'I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice reading code. Here are the general specifications: The code must not have any annotations, comments, or docstrings. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. At the end of the code, there should be a line that causes it to output a number or phrase (a student should be able to type its output into a text box for practicing purposes). The output should be limited to 50 characters or fewer, and not more than one line long. Please store the output of the code in a variable called \'output\', where the last line prints the output variable. Do not include descriptions of the code.'
+    #query = 'I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice reading code. Here are the general specifications: The code must not have any annotations, comments, or docstrings. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. At the end of the code, there should be a line that causes it to output a number or phrase (a student should be able to type its output into a text box for practicing purposes). The output should be limited to 50 characters or fewer, and not more than one line long. Please store the output of the code in a variable called \'output\', where the last line prints the output variable. Do not include descriptions of the code.'
+
+    query = 'I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice reading code. Here are the general specifications: The code must not have any comments or annotations, but it should have docstrings following the PEP8 python styling conventions. Write one docstring for each function (including __init__ if applicable) and class that contains a short summary, descriptions of parameters, and the function return value (if applicable). Use \"Args\" and \"Returns\" for this. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. All code must be wrapped in a function or a class.  Do not include descriptions of, or introductions to, the code; just respond with the code.'
+
 
     #prevent common problems
     if random.randint(1,10) != 10:
@@ -264,10 +272,10 @@ def query_fill_in_vars(difficultyLevel):
     query += tricky_level
 
     #enforce 'output' variable.
-    query += " Please store the output of the code in a variable called \'output\'. The last line of the code must be print(output), with normal closing grave marks. Do not write a function on a line by itself, all function calls must be placed in variables."
+    #query += " Please store the output of the code in a variable called \'output\'. The last line of the code must be print(output), with normal closing grave marks. Do not write a function on a line by itself, all function calls must be placed in variables."
 
     #all code must be in a function, otherwise there's nothing for the user to do
-    query += " Other than this line, all code must be wrapped in one or more functions. Do not use any wrapper functions. Place test calls to the function at the bottom of the script, before the output variable."
+    #query += " Other than this line, all code must be wrapped in one or more functions. Do not use any wrapper functions. Place test calls to the function at the bottom of the script, before the output variable."
 
     #easy vs medium/hard problems have different subjects
     easy_subjects = "checking if a number (1-10) is divisible by another,listing all divisors of a number,counting the number of divisors,finding the largest or smallest divisor of a number,checking if a number is prime (brute force),listing the first n prime numbers,finding the smallest prime greater than a give number,something involving prime numbers,computing the gcd of a number,computing the lcm using the gcd,checking if two numbers are co-prime,basic modular arithmetic,finding the remainder of a large number,checking if a number is congruent to another modulo n,checking if a number is even or odd,counting the number of even or odd numbers in a range,summing only the even or odd numbers in a list,computing the sum of the digits in a number,finding the digital root,fibonacci sequence,converting a number from decimal to binary,converting a number from binary to decimal,checking if a number is a palindrome,something involving palindromes but not checking them,computing the first n fibonacci numbers,finding the sum of the first n fibonacci numbers,checking if a number if a fibonacci number".split(",")
@@ -297,9 +305,9 @@ def query_fill_in_vars(difficultyLevel):
     # query += f" Please use an example related to {chosen_subject}. Feel free to make a more granular problem if applicable."
 
 
-    query += " Please store the output of the code in a variable called \'output\'. The last line of the code must be print(output), with normal closing grave marks."
+    #query += " Please store the output of the code in a variable called \'output\'. The last line of the code must be print(output), with normal closing grave marks."
 
-    query += " Other than this line, all code must be wrapped in one or more functions."
+    #query += " Other than this line, all code must be wrapped in one or more functions."
 
     return query
 

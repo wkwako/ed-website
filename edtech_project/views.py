@@ -58,18 +58,26 @@ def practice(request):
 
             unmixed_lines = ""
 
+
             if problem_type == "fill_in_vars":
-                insert_at = []
-                code_lines = chatgpt_text.split("\n")
-                print ("starting enumeration across code_lines")
-                for i, item in enumerate(code_lines):
-                    if len(item) >= 4 and item[:4] == "def ":
-                        insert_at.append(i+1)
-                
-                empty_docstring = '    \"\"\" \"\"\"'
-                for i in insert_at[::-1]:
-                    code_lines.insert(i, empty_docstring)
-                chatgpt_text = "\n".join(code_lines)
+
+                #filter out halluciations in chatgpt_text (look for/remove extra set of docstrings)
+                lines_to_remove = []
+                code_lines = chatgpt_text.splitlines()
+                for i, line in enumerate(code_lines):
+                    if line.strip() in ["\"\"\" \"\"\"", "\"\"\"\"\"\""]:
+                        lines_to_remove.append(i)
+
+                for i in lines_to_remove[::-1]:
+                    del code_lines[i]
+
+                chatgpt_text = '\n'.join(code_lines)
+
+                indices = [m.start() for m in re.finditer('\"\"\"', chatgpt_text)]
+                for i in range(len(indices))[::-2]:
+                    start = indices[i-1]
+                    end = indices[i]
+                    chatgpt_text = chatgpt_text[:start+3] + ' ' + chatgpt_text[end:]
 
             elif problem_type == "drag_and_drop":
                 chatgpt_text = chatgpt_text[9:-3]
@@ -82,10 +90,11 @@ def practice(request):
 
             #code is valid
             if result:
-                print (f'previous correct answer: {output}')
-                output = utilities.normalize_output_answer(output)
-                print (f'normalized correct answer: {output}')
-                request.session["correct_answer"] = output
+                if problem_type != "fill_in_vars":
+                    print (f'previous correct answer: {output}')
+                    output = utilities.normalize_output_answer(output)
+                    print (f'normalized correct answer: {output}')
+                    request.session["correct_answer"] = output
 
                 #variables that are sent back to the front end, processed by xhr.load()
                 return JsonResponse({
@@ -200,12 +209,12 @@ def safety_checks(user_input, initial_chatGPTResponse):
     #END CODE FROM CHATGPT
     
     #checks for calls to internal variables that should not be accessed
-    if "__" in user_input:
-        return False, "Double underscores detected, please rename your variables"
+    # if "__" in user_input:
+    #     return False, "Double underscores detected, please rename your variables"
     
     #checks for infinite loops
     #START CODE FROM 'python_user' on stackoverflow: https://stackoverflow.com/questions/67230018/python-checking-its-own-code-before-running-usage-errors
-    elif isinstance(node, ast.While) and isinstance(node.test, ast.Constant) and node.test.value is True:
+    if isinstance(node, ast.While) and isinstance(node.test, ast.Constant) and node.test.value is True:
         #END CODE FROM 'python_user' on stackoverflow: https://stackoverflow.com/questions/67230018/python-checking-its-own-code-before-running-usage-errors
         return False, "Error: infinite loop detected"
     
@@ -218,15 +227,26 @@ def safety_checks(user_input, initial_chatGPTResponse):
     initial_lines = initial_chatGPTResponse.split("\n")
     user_lines = user_input.split("\n")
     new_indices = []
+    
+    #'i' is position in initial_lines, 'j' is position in user_lines
     i = 0
     j = 0
     while i < len(initial_lines):
+        #code lines are equal, go to next indices in both lists
         if user_lines[i].strip() == initial_lines[i].strip():
             i += 1
             j += 1
+        #code lines are not equal
         else:
+            #this user line must have been modified
             new_indices.append(j)
-            j += 1
+            #i and j are the same, so original line was modified
+            if i == j:
+                i += 1
+                j += 1
+            #completely new line, increment only j to 'catch up' to initial_lines
+            else:
+                j += 1
 
     #check that all these lines are only strings
     
@@ -234,19 +254,12 @@ def safety_checks(user_input, initial_chatGPTResponse):
         if type(user_lines[idx]) != str:
             return False, "Error: non-strings detected in user-modified code."
 
-
-
-
-    # user_lines = len(user_input.split("\n"))
-    # initial_lines = len(initial_chatGPTResponse.split("\n"))
-    # if user_lines != initial_lines:
-    #     return False, "Error: total number of lines different than starting number of lines, please edit code"
-
     return True, "Code passed initial safety checks"
 
 def check_answer_fill_in_vars(request):
     """Checks a user's answer for the 'fill_in_vars' problem type."""
     if request.method == "POST":
+        print ('CHECK ANSWER STARTING')
         data = json.loads(request.body)
         user_input = data.get("user_input", "")
         difficultyLevel = data.get("difficulty", "undefined")
@@ -271,7 +284,9 @@ def check_answer_fill_in_vars(request):
             return JsonResponse({"success": True, "message": reply})
 
         #performs safety checks
+        print ('STARTING SAFETY CHECKS')
         result,msg = safety_checks(user_input, initial_chatGPTResponse)
+        print ('ENDING SAFETY CHECKS')
         if not result:
             #code was not safe, return error message to user
             return JsonResponse({"success": True, "message": msg})
@@ -306,6 +321,7 @@ def check_answer_fill_in_vars(request):
 
         temperature = 1.0
 
+        print ('QUERYING CHATGPT FOR GRADING')
         reply = utilities.chatgpt_query(query, temperature)
         is_user_correct = reply == "Correct"
 
@@ -314,6 +330,7 @@ def check_answer_fill_in_vars(request):
         current_user = request.user
         utilities.store_in_db(request, current_user, difficultyLevel, initial_chatGPTResponse, is_user_correct, problem_type, initial_chatGPTResponse)
 
+        print ('CHECK ANSWER ENDING')
         return JsonResponse({"success": True, "message": reply})
 
     return JsonResponse({"success": False, "error": "Request method was not POST"}, status=405)
