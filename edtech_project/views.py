@@ -133,6 +133,7 @@ def history(request):
     # 5. use the data in history.html
 
     context = {}
+    
     #selects the most recent attempted problems, up to 20.
     user_history = UserHistory.objects.filter(user=request.user).order_by("-timestamp")[:20]
 

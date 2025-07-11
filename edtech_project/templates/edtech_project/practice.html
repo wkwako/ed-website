@@ -128,13 +128,13 @@
 
             //START CODE FROM CHATGPT
             let existingSortable = document.getElementById("sortable-code-block");
-            console.log("🕵️‍♂️ existingSortable:", existingSortable);
+            //console.log("existingSortable:", existingSortable);
             if (existingSortable) {
                 const sortableInstance = Sortable.get(existingSortable);
-                console.log("🕵️‍♂️ sortableInstance:", sortableInstance);
+                console.log("sortableInstance:", sortableInstance);
                 if (sortableInstance) {
                     sortableInstance.destroy();
-                    console.log("✅ Sortable instance destroyed");
+                    console.log("Sortable instance destroyed");
                 }
                 existingSortable.remove();
             }
@@ -154,9 +154,6 @@
                 document.getElementById("correct-answer").value = data.correct_answer;
                 chatResponseDiv.classList.remove("highlight-drag-and-drop");
                 chatResponseDiv.classList.add("highlight-default");
-
-                // console.log("✅ Received data:", data);
-                // console.log("🚦 Problem type value:", document.getElementById("problem-type").value);
 
                 //if problem type is "determine_output" (standard)
                 if (document.getElementById("problem-type").value === "determine_output") {
@@ -204,12 +201,15 @@
                     resetButton.style.visibility = 'visible';
 
                     //chatReponseDiv is editable, override default behavior of creating a div when the user presses enter
+
+                    //START CODE FROM CHATGPT
                     chatResponseDiv.addEventListener("keypress", function (event) {
                         if (event.key === "Enter") {
                             event.preventDefault(); // Prevents default <div> insertion
                             document.execCommand("insertLineBreak"); // Inserts a <br> instead
                         }
                     });
+                    //END CODE FROM CHATGPT
 
                     //performs syntax hightlighting
                     document.querySelectorAll('pre code').forEach((block) => {
@@ -340,153 +340,77 @@
  * Calls into functions that check the user's input against the correct answer.
  */ 
 function submitUserAnswer() {
-    var userSubmit = document.getElementById('submit-answer');
-    let difficulty = document.getElementById('difficulty').value;
-    let hintsButton = document.getElementById("hints-button");
-    let problemType = document.getElementById("problem-type").value;
-    let whyButton = document.getElementById("why-button");
-    let hintsGroup = document.getElementById("hints-group");
-    let resetProblem = document.getElementById("reset-problem");
+    const userSubmit = document.getElementById('submit-answer');
+    const difficulty = document.getElementById('difficulty').value;
+    const hintsButton = document.getElementById("hints-button");
+    const problemType = document.getElementById("problem-type").value;
+    const whyButton = document.getElementById("why-button");
+    const hintsGroup = document.getElementById("hints-group");
+    const resetProblem = document.getElementById("reset-problem");
+    const feedbackMessage = document.getElementById("feedback");
+
+    let url = "";
+    let payload = {
+        difficulty: difficulty,
+        problem_type: problemType,
+    };
 
     try {
-        //run answer checking logic specific to "determine_output" problem type
         if (problemType === "determine_output") {
-            let userInput = document.getElementById("user-input").value;
-            //send data to /practice/check-answer/. see views.py for where this goes
-            fetch("/practice/check-answer/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": "{{ csrf_token }}"
-            },
-                body: JSON.stringify({
-                    user_input: userInput,
-                    difficulty: difficulty,
-                    problem_type: problemType,
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                //get feedback and display it to the user
-                let feedbackMessage = document.getElementById("feedback");
-                if (data.message.includes("Correct")) {
-                    //user's answer was correct, display text and hide some buttons
-                    feedbackMessage.textContent = "Correct!";
-                    feedbackMessage.style.color = "#6eff6e";
-                    userSubmit.style.visibility = "hidden";
-                    userSubmit.style.display = "none";
-                    hintsButton.style.visibility = "hidden";
-                    hints.innerHTML = "";
-                    whyButton.style.display = "flex";
-                    whyButton.style.visibility = "visible";
-                    hintsGroup.style.display = "none";
-                }
-                else {
-                    //user's answer was incorrect, display text
-                    feedbackMessage.textContent = "Incorrect";
-                    feedbackMessage.style.color = "#f74364";
-                    userSubmit.style.display = "inline-block";
-                }
-            })
+            payload.user_input = document.getElementById("user-input").value;
+            url = "/practice/check-answer/";
         }
 
-        //run answer checking logic specific to "fill_in_vars" problem type
         else if (problemType === "fill_in_vars") {
-            let userInput = document.getElementById('chatgpt-response').textContent;
-            let initial_chatGPTResponse = document.getElementById("initial-response").value;
-            fetch("/practice/check-answer-fill-in-vars/", {
-            method: "POST",
-            headers: {
-                "Content-Type": "application/json",
-                "X-Requested-With": "XMLHttpRequest",
-                "X-CSRFToken": "{{ csrf_token }}"
-            },
-                body: JSON.stringify({
-                    user_input: userInput,
-                    difficulty: difficulty,
-                    initial_chatGPTResponse: initial_chatGPTResponse,
-                    problem_type: problemType,
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                let feedbackMessage = document.getElementById("feedback");
-                if (data.message.includes("Correct")) {
-                    feedbackMessage.textContent = "Correct!";
-                    userSubmit.style.display = "none";
-                    feedbackMessage.style.color = "#6eff6e";
-                    userSubmit.style.visibility = "hidden";
-                    hintsButton.style.visibility = "hidden";
-                    hints.innerHTML = "none";
-                    hintsGroup.style.display = "none";
-                    whyButton.style.display = "flex";
-                    whyButton.style.visibility = "visible";
-                    resetProblem.style.visibility = "hidden";
-                }
-                else {
-                    feedbackMessage.textContent = data.message;
-                    feedbackMessage.style.color = "#f74364";
-                    userSubmit.style.display = "inline-block";
-                }
-            })
+            payload.user_input = document.getElementById("chatgpt-response").textContent;
+            payload.initial_chatGPTResponse = document.getElementById("initial-response").value;
+            url = "/practice/check-answer-fill-in-vars/";
         }
 
         else if (problemType === "drag_and_drop") {
-            //console.log("submit button is being pressed")
-            //START CODE FROM CHATGPT
-            let blocks = document.querySelectorAll('#sortable-code-block .draggable-line code');
-            let codeLines = Array.from(blocks).map(code => code.textContent);
-            let finalCode = codeLines.join('\n');
-            //END CODE FROM CHATGPT
-            let correctAnswer = document.getElementById("correct-answer").value
-            let userInput = finalCode;
-            let initial_chatGPTResponse = document.getElementById("initial-response").value;
-            fetch("/practice/check-answer-drag-and-drop/", {
+            const blocks = document.querySelectorAll('#sortable-code-block .draggable-line code');
+            const codeLines = Array.from(blocks).map(code => code.textContent);
+            const finalCode = codeLines.join('\n');
+
+            payload.user_input = finalCode;
+            payload.final_code = finalCode;
+            payload.initial_chatGPTResponse = document.getElementById("initial-response").value;
+            payload.correct_answer = document.getElementById("correct-answer").value;
+            url = "/practice/check-answer-drag-and-drop/";
+        }
+
+        fetch(url, {
             method: "POST",
             headers: {
                 "Content-Type": "application/json",
                 "X-Requested-With": "XMLHttpRequest",
                 "X-CSRFToken": "{{ csrf_token }}"
             },
-                body: JSON.stringify({
-                    user_input: userInput,
-                    difficulty: difficulty,
-                    initial_chatGPTResponse: initial_chatGPTResponse,
-                    problem_type: problemType,
-                    final_code: finalCode,
-                    correct_answer: correctAnswer,
-                })
-            })
-            .then(response => response.json())
-            .then(data => {
-                let feedbackMessage = document.getElementById("feedback");
-                if (data.message.includes("Correct")) {
-                    feedbackMessage.textContent = "Correct!";
-                    userSubmit.style.display = "none";
-                    feedbackMessage.style.color = "#6eff6e";
-                    userSubmit.style.visibility = "hidden";
-                    hintsButton.style.visibility = "hidden";
-                    hints.innerHTML = "none";
-                    hintsGroup.style.display = "none";
-                    whyButton.style.display = "flex";
-                    whyButton.style.visibility = "visible";
-                    resetProblem.style.visibility = "hidden";
-                }
-                else {
-                    feedbackMessage.textContent = data.message;
-                    feedbackMessage.style.color = "#f74364";
-                    userSubmit.style.display = "inline-block";
-                }
-            })
-        }
+            body: JSON.stringify(payload)
+        })
+        .then(response => response.json())
+        .then(data => {
+            if (data.message.includes("Correct")) {
+                feedbackMessage.textContent = "Correct!";
+                feedbackMessage.style.color = "#6eff6e";
+                userSubmit.style.display = "none";
+                userSubmit.style.visibility = "hidden";
+                hintsButton.style.visibility = "hidden";
+                hints.innerHTML = "";
+                hintsGroup.style.display = "none";
+                whyButton.style.display = "flex";
+                whyButton.style.visibility = "visible";
+                resetProblem.style.visibility = "hidden";
+            } else {
+                feedbackMessage.textContent = data.message || "Incorrect";
+                feedbackMessage.style.color = "#f74364";
+                userSubmit.style.display = "inline-block";
+            }
+        });
 
+    } catch (error) {
+        console.error("Error during submission:", error);
     }
-
-    catch (error) {
-        console.error("Error:", error);
-    }
-    
 }
 
 /**
