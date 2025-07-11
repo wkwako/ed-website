@@ -102,6 +102,7 @@ def practice(request):
                     request.session["correct_answer"] = output
 
                 #variables that are sent back to the front end, processed by xhr.load()
+                #print (f'SENDING BACK CORRECT ANSWER AS: {output}')
                 return JsonResponse({
                     "chatgpt_response": chatgpt_text,
                     "problem_type": problem_type,
@@ -157,7 +158,7 @@ def check_answer(request):
         user_input = data.get("user_input", None).strip()
         correct_answer = request.session.get("correct_answer")
         problem_type = data.get("problem_type", "")
-        print (f"problem type for model is: {problem_type}")
+        #print (f"problem type for model is: {problem_type}")
 
         #correct_answer is None. something has gone terribly wrong
         if not correct_answer:
@@ -271,6 +272,9 @@ def check_answer_fill_in_vars(request):
         difficultyLevel = data.get("difficulty", "undefined")
         initial_chatGPTResponse = data.get("initial_chatGPTResponse", "")
         problem_type = data.get("problem_type", "")
+        correct_answer = data.get("correct_answer", "")[9:-3]
+
+        print (f'CORRECT ANSWER ON CHECKING ANSWER: {correct_answer}')
 
         #removing whitespace at start of code
         while user_input[0] == " ":
@@ -285,9 +289,9 @@ def check_answer_fill_in_vars(request):
             return JsonResponse({"success": True, "message": reply})
         
         #user has not replaced all dummy names
-        if "mystery" in user_input or "unknown" in user_input:
-            reply = "Generic function/variable names still exist."
-            return JsonResponse({"success": True, "message": reply})
+        # if "mystery" in user_input or "unknown" in user_input:
+        #     reply = "Generic function/variable names still exist."
+        #     return JsonResponse({"success": True, "message": reply})
 
         #performs safety checks
         print ('STARTING SAFETY CHECKS')
@@ -298,29 +302,29 @@ def check_answer_fill_in_vars(request):
             return JsonResponse({"success": True, "message": msg})
 
         #code is safe to run
-        try:
-            #calculates the output of the user-edited code
-            f = StringIO()
-            with redirect_stdout(f):
-                local_vars = {}
-                exec(user_input, local_vars, local_vars)
-                output1 = f.getvalue()
+        # try:
+        #     #calculates the output of the user-edited code
+        #     f = StringIO()
+        #     with redirect_stdout(f):
+        #         local_vars = {}
+        #         exec(user_input, local_vars, local_vars)
+        #         output1 = f.getvalue()
 
-            #calculates the output of the original code
-            f = StringIO()
-            with redirect_stdout(f):
-                local_vars = {}
-                exec(initial_chatGPTResponse, local_vars, local_vars)
-                output2 = f.getvalue()
+        #     #calculates the output of the original code
+        #     f = StringIO()
+        #     with redirect_stdout(f):
+        #         local_vars = {}
+        #         exec(initial_chatGPTResponse, local_vars, local_vars)
+        #         output2 = f.getvalue()
 
-            #original code and user-edited code should produce the same result
-            if output1 != output2:
-                reply = "The output of the code is different from its original. Please use the restart button to try again."
-                return JsonResponse({"success": True, "message": reply})
+        #     #original code and user-edited code should produce the same result
+        #     if output1 != output2:
+        #         reply = "The output of the code is different from its original. Please use the restart button to try again."
+        #         return JsonResponse({"success": True, "message": reply})
             
-        except:
-            reply = "Error: the code could not be run."
-            return JsonResponse({"success": True, "message": reply})
+        # except:
+        #     reply = "Error: the code could not be run."
+        #     return JsonResponse({"success": True, "message": reply})
         
         #query = f"I gave a student this block of python code: {initial_chatGPTResponse}. The goal is for them to fill in the functions and variables named 'mystery1' etc. and 'unknown1' etc so that these function and variable names no longer exist. I would like you to analyze how they did. Here is the finished code they submitted: {user_input}. Please grade leniently, but accurately. Please output 'Correct' if the functions and variables are correctly named (i.e. approximating what the function is actually doing), and 'Incorrect' if not. I do not care about the contents of the function. ONLY judge them on these variable names. If the answer is Incorrect, please provide a short hint for the student about what they got wrong, but without explicitely giving them the answer (i.e. telling them what the function does). For example, if a student named all functions correctly but forgot to change the name in function calls, tell them that."
         query = f"I gave a student this block of python code: {initial_chatGPTResponse}. The goal is for them to add docstrings to the code that make sense and adhere to the PEP8 style conventions. I would like you to analyze how they did. Here is the finished code they submitted: {user_input}. Please grade leniently, but accurately. Please output 'Correct' if the docstrings correctly and briefly summarize the function 'Incorrect' if not. I do not care about the contents of the function. ONLY judge them on the docstrings. If the answer is Incorrect, please provide a short hint for the student about what they got wrong, but without explicitely giving them the answer (i.e. telling them what the function does). For example, a docstring of \'validates an array\' is not specific enough, and you should tell them that."
@@ -332,9 +336,8 @@ def check_answer_fill_in_vars(request):
         is_user_correct = reply == "Correct"
 
         #need to ask chatGPT to generate correct_code
-        correct_code = initial_chatGPTResponse
         current_user = request.user
-        utilities.store_in_db(request, current_user, difficultyLevel, initial_chatGPTResponse, is_user_correct, problem_type, initial_chatGPTResponse)
+        utilities.store_in_db(request, current_user, difficultyLevel, user_input, is_user_correct, problem_type, correct_answer)
 
         print ('CHECK ANSWER ENDING')
         return JsonResponse({"success": True, "message": reply})
@@ -354,8 +357,6 @@ def check_answer_drag_and_drop(request):
         final_code = data.get("final_code", "")
         correct_answer = data.get("correct_answer", "")
         current_user = request.user
-
-
 
         f = StringIO()
         with redirect_stdout(f):

@@ -36,18 +36,36 @@
     <!-- the data is coming from the context variable passed in history() in views.py -->
     {% for entry in history %}
         <p class="history-info">
+            <!-- print general information about each problem -->
             <strong> Difficulty: </strong> {{entry.difficulty}} &nbsp; <br>
             <strong> Result: </strong> 
             <!--START CODE FROM CHATGPT-->
             <span class="{% if entry.is_correct %}correct-text{% else %}incorrect-text{% endif %}"> 
                 {{ entry.is_correct|yesno:"Correct,Incorrect" }}
             </span> <br>
-            <strong> Problem type: </strong> {{entry.get_problem_type_display}} &nbsp; <br> <br>
             <!--END CODE FROM CHATGPT-->
+            <strong> Problem type: </strong> {{entry.get_problem_type_display}} &nbsp; <br> <br>
+            <strong> Submitted code: </strong> <br> <br>
 
         </p>
         <pre><code class="language-python" spellcheck="false" and autocomplete="off" onblur="hljs.highlightElement(this);">{{ entry.problem_text }}</code></pre>
         <br>
+
+        <!-- If problem type is determine_output and user got it incorrect, display correct answer -->
+        {% if entry.problem_type == "determine_output" and entry.is_correct == False %}
+            <p class="history-info">
+                <strong> Correct answer: {{entry.correct_answer}} </strong>
+            </p>
+            
+        {% endif %}
+
+        {% if entry.problem_type == "fill_in_vars" and entry.is_correct == False %}
+            <p class="history-info">
+                <strong> Example of an acceptable answer: </strong> <br>
+            </p>
+
+            <pre><code class="language-python" spellcheck="false" and autocomplete="off" onblur="hljs.highlightElement(this);">{{ entry.correct_answer }}</code></pre>
+        {% endif %}
 
         <!-- If problem is type drag_and_drop and user got it incorrect, display correct answer -->
         {% if entry.problem_type == "drag_and_drop" and entry.is_correct == False %}
@@ -56,13 +74,6 @@
             </p>
             
             <pre><code class="language-python" spellcheck="false" and autocomplete="off" onblur="hljs.highlightElement(this);">{{ entry.correct_answer }}</code></pre>
-        {% endif %}
-
-        {% if entry.problem_type == "determine_output" and entry.is_correct == False %}
-            <p class="history-info">
-                <strong> Correct answer: {{entry.correct_answer}} </strong>
-            </p>
-            
         {% endif %}
 
         <hr>

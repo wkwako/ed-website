@@ -350,33 +350,34 @@ function submitUserAnswer() {
     const feedbackMessage = document.getElementById("feedback");
 
     let url = "";
-    let payload = {
+    let data = {
         difficulty: difficulty,
         problem_type: problemType,
+        correct_answer: document.getElementById("correct-answer")?.value || null,
     };
 
     try {
         if (problemType === "determine_output") {
-            payload.user_input = document.getElementById("user-input").value;
             url = "/practice/check-answer/";
+            data.user_input = document.getElementById("user-input").value;
         }
 
         else if (problemType === "fill_in_vars") {
-            payload.user_input = document.getElementById("chatgpt-response").textContent;
-            payload.initial_chatGPTResponse = document.getElementById("initial-response").value;
             url = "/practice/check-answer-fill-in-vars/";
+            data.user_input = document.getElementById("chatgpt-response").textContent;
+            data.initial_chatGPTResponse = document.getElementById("initial-response").value;
         }
 
         else if (problemType === "drag_and_drop") {
+            url = "/practice/check-answer-drag-and-drop/";
             const blocks = document.querySelectorAll('#sortable-code-block .draggable-line code');
             const codeLines = Array.from(blocks).map(code => code.textContent);
             const finalCode = codeLines.join('\n');
 
-            payload.user_input = finalCode;
-            payload.final_code = finalCode;
-            payload.initial_chatGPTResponse = document.getElementById("initial-response").value;
-            payload.correct_answer = document.getElementById("correct-answer").value;
-            url = "/practice/check-answer-drag-and-drop/";
+            data.user_input = finalCode;
+            data.final_code = finalCode;
+            data.initial_chatGPTResponse = document.getElementById("initial-response").value;
+            
         }
 
         fetch(url, {
@@ -386,7 +387,7 @@ function submitUserAnswer() {
                 "X-Requested-With": "XMLHttpRequest",
                 "X-CSRFToken": "{{ csrf_token }}"
             },
-            body: JSON.stringify(payload)
+            body: JSON.stringify(data)
         })
         .then(response => response.json())
         .then(data => {
