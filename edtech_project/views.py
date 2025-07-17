@@ -329,7 +329,7 @@ def check_answer_fill_in_vars(request):
         #query = f"I gave a student this block of python code: {initial_chatGPTResponse}. The goal is for them to fill in the functions and variables named 'mystery1' etc. and 'unknown1' etc so that these function and variable names no longer exist. I would like you to analyze how they did. Here is the finished code they submitted: {user_input}. Please grade leniently, but accurately. Please output 'Correct' if the functions and variables are correctly named (i.e. approximating what the function is actually doing), and 'Incorrect' if not. I do not care about the contents of the function. ONLY judge them on these variable names. If the answer is Incorrect, please provide a short hint for the student about what they got wrong, but without explicitely giving them the answer (i.e. telling them what the function does). For example, if a student named all functions correctly but forgot to change the name in function calls, tell them that."
         query = f"I gave a student this block of python code: {initial_chatGPTResponse}. The goal is for them to add docstrings to the code that make sense and adhere to the PEP8 style conventions. I would like you to analyze how they did. Here is the finished code they submitted: {user_input}. Please grade leniently, but accurately. Please output 'Correct' if the docstrings correctly and briefly summarize the function 'Incorrect' if not. I do not care about the contents of the function. ONLY judge them on the docstrings. If the answer is Incorrect, please provide a short hint for the student about what they got wrong, but without explicitely giving them the answer (i.e. telling them what the function does). For example, a docstring of \'validates an array\' is not specific enough, and you should tell them that."
 
-        temperature = 1.0
+        temperature = 0.3
 
         print ('QUERYING CHATGPT FOR GRADING')
         reply = utilities.chatgpt_query(query, temperature)
@@ -448,8 +448,6 @@ def generate_explanation(request):
         instructions1 = " I need you to create an explanation for why this is the right answer."
         restrictions1 = "Including function and variable names in your explanation is okay, but do not include multiple lines of code. Your explanation cannot be longer than 150 words."
         
-        print (f'CORRECT ANSWER IS: {correct_answer}')
-
         if problem_type == "determine_output":
             query += f" In this particular problem, the student was tasked with determining the output. In this case, the answer to the problem is {correct_answer}, which the student got correct."
             query += instructions1
