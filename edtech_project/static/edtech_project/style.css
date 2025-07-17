@@ -1,3 +1,16 @@
+
+#chatgpt-response {
+    padding-left: 1px;
+    border-width: thin;
+    border-color: #a7a7a7;
+    caret-color: white;
+}
+
+.links {
+  color: #e6fffb; /* or whatever color matches your site */
+  text-decoration: underline; /* optional */
+}
+
 #explanation {
     color: #e6fffb;
     font-size: 17px;

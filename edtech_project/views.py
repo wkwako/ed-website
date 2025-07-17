@@ -424,11 +424,11 @@ def generate_hint(request):
         #creates a hint for the fill_in_vars problem type. need to be more careful here so GPT doesn't give
         #away the answer.
         elif problem_type == "fill_in_vars":
-            query += " The goal of this coding assignment is for the student to rename the functions labeled 'mystery1', etc. and the variables labeled 'unknown1' etc. to something more appropriate. What one single tip would you give to this student that might help them rename those functions and variables? Do not give a generic hint like 'think about what each function is doing'. Do not directly tell them what the functions are doing, but guide them in the right direction."
+            query += " The goal of this coding assignment is for the student to add docstrings to the code describing what it does. To this end, they must understand the code to successfully write these docstrings. What one single tip would you give to this student that might help them understand the different functions and classes in the code? Do not give a generic hint like 'think about what each function is doing'. Do not directly tell them what the functions are doing, but guide them in the right direction."
         
         query +=  " Do not include an intro to the tip, like, /'the tip I would suggest is:/'."
 
-        temperature = 1.0
+        temperature = 0.3
         hint = utilities.chatgpt_query(query, temperature)
         
         return JsonResponse({"success": True, "message": hint})
@@ -448,15 +448,17 @@ def generate_explanation(request):
         instructions1 = " I need you to create an explanation for why this is the right answer."
         restrictions1 = "Including function and variable names in your explanation is okay, but do not include multiple lines of code. Your explanation cannot be longer than 150 words."
         
+        print (f'CORRECT ANSWER IS: {correct_answer}')
+
         if problem_type == "determine_output":
             query += f" In this particular problem, the student was tasked with determining the output. In this case, the answer to the problem is {correct_answer}, which the student got correct."
             query += instructions1
             query += " Please focus your explanation on why the code produces this output."
 
         elif problem_type == "fill_in_vars":
-            query += f" In this particular problem, the student was tasked with renaming function and variable names to more appropriate ones, which the student has done successfully."
+            query += f" In this particular problem, the student was tasked with writing docstrings for each core function and class, which the student has done successfully. Here is their submitted answer: {correct_answer}."
             query += instructions1
-            query += " Please focus your explanation on what each function and variable does. Do not mention the student, just explain the code."
+            query += " Please focus your explanation on what each function does. Do not mention the student, just explain the code."
 
         elif problem_type == "drag_and_drop":
             query += f" In this particular problem, the student was tasked with re-arranging each line so the code runs correctly and produces an output of {correct_answer}, which the student has done successfully."
@@ -465,7 +467,7 @@ def generate_explanation(request):
 
         query += restrictions1
 
-        temperature = 1.0
+        temperature = 0.3
         message = utilities.chatgpt_query(query, temperature)
 
         return JsonResponse({"success": True, "message": message})

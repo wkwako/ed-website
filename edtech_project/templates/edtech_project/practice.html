@@ -193,7 +193,7 @@
                     chatResponseDiv.innerHTML = `<p><strong> </strong></p>` + formattedResponse;
                     document.getElementById("initial-response").value = chatResponseDiv.textContent;
                     document.getElementById("initial-response-raw").value = chatResponseDiv.innerHTML;
-                    instructionsDiv.innerHTML = "Rename the missing function and variable names to something more appropriate by editing the above code, then submit your answer when complete. Note: small differences in function/variable names are okay; the grader is lenient. Use the 'Reset Problem' button in the upper-right corner if you need to reload the original problem."
+                    instructionsDiv.innerHTML = `Add docstrings to the code blocks above where indicted with triple quotation marks. Briefly summarize the code, then add parameters and return information. See the <a href="https://peps.python.org/pep-0257/" target="_blank" rel="noopener noreferrer" class="links">PEP 257 Docstring Conventions</a> for information on docstring structure. Note: phrasing differences are okay; the grader is lenient. Use the 'Reset Problem' button in the upper-right corner if you need to reload the original problem.`
                     chatResponseDiv.contentEditable = "true";
                     userInput.style.display = "none";
                     userInputAnswer.style.display = "none";
@@ -205,9 +205,26 @@
                     //START CODE FROM CHATGPT
                     chatResponseDiv.addEventListener("keypress", function (event) {
                         if (event.key === "Enter") {
-                            event.preventDefault(); // Prevents default <div> insertion
-                            document.execCommand("insertLineBreak"); // Inserts a <br> instead
+                            // event.preventDefault(); // Prevents default <div> insertion
+                            // document.execCommand("insertLineBreak"); // Inserts a <br> instead
+                            event.preventDefault();
+                            const br = document.createElement("br");
+                            const selection = window.getSelection();
+                            if (!selection.rangeCount) return;
+
+                            const range = selection.getRangeAt(0);
+                            range.deleteContents();       // Remove any selected text (if any)
+                            range.insertNode(br);         // Insert the <br> exactly where the cursor is
+
+                            // Move the cursor (caret) after the inserted <br>
+                            range.setStartAfter(br);
+                            range.setEndAfter(br);
+                            selection.removeAllRanges();
+                            selection.addRange(range);
                         }
+
+
+                        
                     });
                     //END CODE FROM CHATGPT
 
