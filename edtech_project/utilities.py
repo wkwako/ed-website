@@ -9,6 +9,7 @@ from .models import UserHistory
 import random
 import re
 import hashlib
+import anthropic
 
 def validate_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
     """Queries ChatGPT, then validates the result. Output is a tuple of the form (bool, str, str, str), which maps to
@@ -95,6 +96,35 @@ def chatgpt_query(query, temperature, raw_response=False):
         return chatgpt_text
 
     return chatgpt_response
+
+def anthropic_query(query, temperature):
+    #https://docs.anthropic.com/en/docs/about-claude/models/overview
+    #https://www.anthropic.com/pricing#api
+    role = "You are a computer science teacher."
+    query = "You are a world-class poet. Respond only with short poems."
+    temperature = 0.5
+
+    client = anthropic.Anthropic()
+    client.api_key = settings.ANTHROPIC_KEY
+
+    message = client.messages.create(
+        model="claude-3-5-haiku-20241022",
+        max_tokens=1000,
+        temperature=temperature,
+        system=role,
+        messages=[
+            {
+                "role": "user",
+                "content": [
+                    {
+                        "type": "text",
+                        "text": query
+                    }
+                ]
+            }
+        ]
+    )
+    return message.content[0].text
 
 def validate(text_query,problem_type) -> tuple[bool, str]:
     """Runs the ChatGPT-generated problem to retrieve its output. Performs safety checks."""
