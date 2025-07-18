@@ -208,17 +208,19 @@
                             // event.preventDefault(); // Prevents default <div> insertion
                             // document.execCommand("insertLineBreak"); // Inserts a <br> instead
                             event.preventDefault();
-                            const br = document.createElement("br");
+                            // br = document.createElement("br");
+                            const newline = document.createTextNode("\n");
                             const selection = window.getSelection();
                             if (!selection.rangeCount) return;
 
                             const range = selection.getRangeAt(0);
                             range.deleteContents();       // Remove any selected text (if any)
-                            range.insertNode(br);         // Insert the <br> exactly where the cursor is
+                            range.insertNode(newline);
+                            //range.insertNode(br);         // Insert the <br> exactly where the cursor is
 
                             // Move the cursor (caret) after the inserted <br>
-                            range.setStartAfter(br);
-                            range.setEndAfter(br);
+                            range.setStartAfter(newline);
+                            range.setEndAfter(newline);
                             selection.removeAllRanges();
                             selection.addRange(range);
                         }

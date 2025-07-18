@@ -82,7 +82,7 @@ def chatgpt_query(query, temperature, raw_response=False):
 
     #data
     data = {
-        "model": "gpt-4o-mini",
+        "model": "gpt-4.1-mini",
         "messages": [{"role": "user", "content": query}],
         "temperature": temperature
     }
@@ -344,7 +344,7 @@ def query_fill_in_vars(difficultyLevel):
 def get_query(difficultyLevel) -> tuple[str, str]:
     """Given the difficultyLevel, randomizes the kind of problem received and returns its query.
        Returns a tuple[str,str], where the first string is the problem type and the second is the query."""
-    problem_int = random.randint(1,3) #determines which problems will be generated
+    problem_int = random.randint(2,2) #determines which problems will be generated
     problem_type = ""
     query = ""
 
