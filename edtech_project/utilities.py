@@ -10,6 +10,8 @@ import random
 import re
 import hashlib
 import anthropic
+import asyncio
+import aiohttp
 
 def validate_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
     """Queries ChatGPT, then validates the result. Output is a tuple of the form (bool, str, str, str), which maps to
@@ -39,8 +41,6 @@ def validate_and_query(request, query, temperature, problem_type) -> tuple[bool,
         
         #store extra data about the problem in the session
         request.session["problem_text"] = chatgpt_text
-
-        #validate the code.
 
         if problem_type == "fill_in_vars":
             result, output = True, ""
@@ -97,12 +97,10 @@ def chatgpt_query(query, temperature, raw_response=False):
 
     return chatgpt_response
 
-def anthropic_query(query, temperature):
+def anthropic_query(query, temperature=0.5):
     #https://docs.anthropic.com/en/docs/about-claude/models/overview
     #https://www.anthropic.com/pricing#api
     role = "You are a computer science teacher."
-    query = "You are a world-class poet. Respond only with short poems."
-    temperature = 0.5
 
     client = anthropic.Anthropic()
     client.api_key = settings.ANTHROPIC_KEY
@@ -125,6 +123,65 @@ def anthropic_query(query, temperature):
         ]
     )
     return message.content[0].text
+
+
+async def async_chatgpt_query(session, query, temperature):
+    #API endpoint
+    url = "https://api.openai.com/v1/chat/completions"
+
+    #request headers
+    headers = {
+        "Content-Type": "application/json",
+        "Authorization": f"Bearer {settings.SECRET_KEY}"
+    }
+
+    #data
+    data = {
+        "model": "gpt-4.1-mini",
+        "messages": [{"role": "user", "content": query}],
+        "temperature": temperature
+    }
+
+    async with session.post(url, headers=headers, json=data) as response:
+        response_data = await response.json()
+        return response_data.get("choices", [{}])[0].get("message", {}).get("content", "No response")
+
+async def async_anthropic_query(session, query, temperature):
+    url = "https://api.anthropic.com/v1/messages"
+
+    headers = {
+        "x-api-key": settings.ANTHROPIC_KEY,
+        "anthropic-version": "2023-06-01",
+        "content-type": "application/json",
+    }
+
+    data = {
+        "model": "claude-3-5-haiku-20241022",
+        "max_tokens": 1000,
+        "temperature": temperature,
+        "system": "You are a computer science teacher.",
+        "messages": [
+            {
+                "role": "user",
+                "content": query
+            }
+        ]
+    }
+
+    async with session.post(url, headers=headers, json=data) as response:
+        response_data = await response.json()
+        try:
+            return response_data["content"][0]["text"]
+        except (KeyError, IndexError):
+            return "Anthropic returned an unexpected response."
+        
+async def double_query(query, temperature=0.5):
+    #when you run this, do result = await double_query(query)
+    async with aiohttp.ClientSession() as session:
+        chatgpt_task = async_chatgpt_query(session, query, temperature)
+        anthropic_task = async_anthropic_query(session, query, temperature)
+        result1, result2 = await asyncio.gather(chatgpt_task, anthropic_task)
+        return (result1, result2)
 
 def validate(text_query,problem_type) -> tuple[bool, str]:
     """Runs the ChatGPT-generated problem to retrieve its output. Performs safety checks."""
