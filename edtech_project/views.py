@@ -14,6 +14,8 @@ from io import StringIO
 from contextlib import redirect_stdout
 import ast
 import copy
+import asyncio
+import aiohttp
 
 #STUFF TO FIX:
 #TODO: make spacing between task bar items flexible
@@ -255,8 +257,7 @@ def safety_checks(user_input, initial_chatGPTResponse):
             else:
                 j += 1
 
-    #check that all these lines are only strings
-    
+    #TODO: check that all these lines are only strings?
     for idx in new_indices:
         if type(user_lines[idx]) != str:
             return False, "Error: non-strings detected in user-modified code."
@@ -276,6 +277,12 @@ def check_answer_fill_in_vars(request):
 
         print (f'USER ANSWER: {user_input}')
         print (f'CORRECT ANSWER: {correct_answer}')
+
+        #query_test = asyncio.run(utilities.double_query("Please output the words, \"this is a test\""))
+        
+        #print (f'QUERY TEST IS: {query_test}')
+        #return JsonResponse({"success": True, "message": query_test[0] + query_test[1]})
+
 
         #removing whitespace at start of code
         while user_input[0] == " ":
