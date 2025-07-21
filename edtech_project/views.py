@@ -268,6 +268,7 @@ def check_answer_fill_in_vars(request):
     """Checks a user's answer for the 'fill_in_vars' problem type."""
     if request.method == "POST":
         print ('CHECK ANSWER STARTING')
+        reply = None
         data = json.loads(request.body)
         user_input = data.get("user_input", "")
         difficultyLevel = data.get("difficulty", "undefined")
@@ -277,12 +278,6 @@ def check_answer_fill_in_vars(request):
 
         print (f'USER ANSWER: {user_input}')
         print (f'CORRECT ANSWER: {correct_answer}')
-
-        #query_test = asyncio.run(utilities.double_query("Please output the words, \"this is a test\""))
-        
-        #print (f'QUERY TEST IS: {query_test}')
-        #return JsonResponse({"success": True, "message": query_test[0] + query_test[1]})
-
 
         #removing whitespace at start of code
         while user_input[0] == " ":
@@ -295,11 +290,6 @@ def check_answer_fill_in_vars(request):
         if user_input == initial_chatGPTResponse:
             reply = "The code has not yet been modified."
             return JsonResponse({"success": True, "message": reply})
-        
-        #user has not replaced all dummy names
-        # if "mystery" in user_input or "unknown" in user_input:
-        #     reply = "Generic function/variable names still exist."
-        #     return JsonResponse({"success": True, "message": reply})
 
         #performs safety checks
         print ('STARTING SAFETY CHECKS')
@@ -335,12 +325,36 @@ def check_answer_fill_in_vars(request):
         #     return JsonResponse({"success": True, "message": reply})
         
         #query = f"I gave a student this block of python code: {initial_chatGPTResponse}. The goal is for them to fill in the functions and variables named 'mystery1' etc. and 'unknown1' etc so that these function and variable names no longer exist. I would like you to analyze how they did. Here is the finished code they submitted: {user_input}. Please grade leniently, but accurately. Please output 'Correct' if the functions and variables are correctly named (i.e. approximating what the function is actually doing), and 'Incorrect' if not. I do not care about the contents of the function. ONLY judge them on these variable names. If the answer is Incorrect, please provide a short hint for the student about what they got wrong, but without explicitely giving them the answer (i.e. telling them what the function does). For example, if a student named all functions correctly but forgot to change the name in function calls, tell them that."
-        query = f"I gave a student this block of python code: {initial_chatGPTResponse}. The goal is for them to add docstrings to the code that make sense and adhere to the PEP8 style conventions. I would like you to analyze how they did. Here is the finished code they submitted: {user_input}. Please grade leniently, but accurately. Do not grade on whitespace. Please output \"Correct\"' if the docstrings correctly and briefly summarize each function/class, and \"Incorrect.\" if not. ONLY judge the docstring content, not the function content. If the answer is Incorrect, please provide a short hint for the student about what they got wrong, but without explicitely giving them the answer (i.e. telling them what the function does). Do not introduce the hint with \"Hint\", just provide it after \"Incorrect.\""
-
+        query = f"I gave a student this block of python code: {initial_chatGPTResponse}. The goal is for them to add docstrings to the code that make sense and adhere to the PEP8 style conventions. I would like you to analyze how they did. Here is the finished code they submitted: {user_input}. Please grade leniently, but accurately. Do not grade on small formatting issues, like whitespace. Please output ONLY \"Correct\"' if the docstrings correctly summarize each function/class, and \"Incorrect.\" if not. ONLY judge the docstring content, not the function content. If the answer is Incorrect, please provide a short hint (1-2 short sentences) for the student about what they got wrong, but without explicitely giving them the answer (i.e. telling them what the function does). Do not introduce the hint with \"Hint\", just provide it after \"Incorrect.\". Do not mention the student in the hint. The first word of your response MUST be either \"Correct\" or \"Incorrect.\""
         temperature = 0.3
 
-        reply = utilities.chatgpt_query(query, temperature)
-        is_user_correct = reply == "Correct"
+        #query_test = asyncio.run(utilities.double_query("Please output the words, \"this is a test\""))
+        #print (f'QUERY TEST IS: {query_test}')
+        #return JsonResponse({"success": True, "message": query_test[0] + query_test[1]})
+
+        replies = asyncio.run(utilities.double_query(query, temperature))
+        is_user_correct = (replies[0] == "Correct") and (replies[1] == "Correct")
+
+        if not is_user_correct:
+            if replies[1][:2] == "In":
+
+                reply = replies[1]
+            else:
+                reply = replies[0]
+
+        else:
+            reply = "Correct"
+
+        # print (f'CHATGPT RESPONSE: {replies[0]}')
+        # print (f'ANTHROPIC RESPONSE: {replies[1]}')
+        # print (f'REPLY: {reply}')
+
+        print (f'REPLIES: {replies}')
+
+        # reply = utilities.chatgpt_query(query, temperature)
+        # is_user_correct = reply == "Correct"
+
+        
 
         #need to ask chatGPT to generate correct_code
         current_user = request.user
