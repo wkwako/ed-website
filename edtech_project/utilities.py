@@ -174,7 +174,7 @@ async def async_anthropic_query(session, query, temperature):
             return response_data["content"][0]["text"]
         except (KeyError, IndexError):
             return "Anthropic returned an unexpected response."
-        
+
 async def double_query(query, temperature=0.5):
     #when you run this, do result = await double_query(query)
     async with aiohttp.ClientSession() as session:
@@ -282,8 +282,11 @@ def mix_lines(code,exclusions=[]):
 def store_in_db(request, current_user, difficulty, problem_text, is_user_correct, problem_type, correct_code):
     """Stores a problem in the user's history if it does not already exist."""
     if request.user.is_authenticated:
-        problem_hash = hashlib.sha256(problem_text.encode()).hexdigest()
-        if problem_type == "drag_and_drop":
+        if problem_type == "determine_output":
+            problem_hash = hashlib.sha256(problem_text.encode()).hexdigest()
+        if problem_type == "fill_in_vars":
+            problem_hash = hashlib.sha256(correct_code.encode()).hexdigest()
+        elif problem_type == "drag_and_drop":
             problem_hash = hashlib.sha256(correct_code.encode()).hexdigest()
         if not UserHistory.objects.filter(user=current_user, problem_hash=problem_hash).exists() and problem_hash:
             UserHistory.objects.create(user=current_user, problem_text=problem_text, difficulty=difficulty, is_correct=is_user_correct, problem_type=problem_type, problem_hash=problem_hash, correct_answer=correct_code)
