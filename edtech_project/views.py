@@ -333,17 +333,20 @@ def check_answer_fill_in_vars(request):
         #return JsonResponse({"success": True, "message": query_test[0] + query_test[1]})
 
         replies = asyncio.run(utilities.double_query(query, temperature))
-        is_user_correct = (replies[0] == "Correct") and (replies[1] == "Correct")
 
-        if not is_user_correct:
-            if replies[1][:2] == "In":
+        is_user_correct = replies[1] == "Correct"
+        reply = replies[1]
+        
+        # is_user_correct = (replies[0] == "Correct") and (replies[1] == "Correct")
+        # if not is_user_correct:
+        #     if replies[1][:2] == "In":
 
-                reply = replies[1]
-            else:
-                reply = replies[0]
+        #         reply = replies[1]
+        #     else:
+        #         reply = replies[0]
 
-        else:
-            reply = "Correct"
+        # else:
+        #     reply = "Correct"
 
         # print (f'CHATGPT RESPONSE: {replies[0]}')
         # print (f'ANTHROPIC RESPONSE: {replies[1]}')
@@ -467,26 +470,35 @@ def generate_explanation(request):
         query = chatGPT_response + "\nThis is a Python coding problem I've given to a student. "
         instructions1 = " I need you to create an explanation for why this is the right answer."
         restrictions1 = "Including function and variable names in your explanation is okay, but do not include multiple lines of code. Your explanation cannot be longer than 150 words."
-        
+
+        type_instructions = None
+        explanation_focus = None
         if problem_type == "determine_output":
-            query += f" In this particular problem, the student was tasked with determining the output. In this case, the answer to the problem is {correct_answer}, which the student got correct."
-            query += instructions1
-            query += " Please focus your explanation on why the code produces this output."
+            type_instructions = f" In this particular problem, the student was tasked with determining the output of the code. The answer to this problem is {correct_answer}, which the student got correct."
+            explanation_focus = " Please focus your explanation on why the code produces this output."
 
         elif problem_type == "fill_in_vars":
-            query += f" In this particular problem, the student was tasked with writing docstrings for each core function and class, which the student has done successfully. Here is their submitted answer: {correct_answer}."
-            query += instructions1
-            query += " Please focus your explanation on what each function does. Do not mention the student, just explain the code."
+            type_instructions = f" In this particular problem, the student was tasked with writing docstrings for each core function and class, which the student has done successfully. Here is their submitted answer: {correct_answer}."
+            explanation_focus = " Please focus your explanation on what each function does. Do not mention the student, just explain the code."
 
         elif problem_type == "drag_and_drop":
-            query += f" In this particular problem, the student was tasked with re-arranging each line so the code runs correctly and produces an output of {correct_answer}, which the student has done successfully."
-            query += instructions1
-            query += " Please focus your explanation on why the code produces this output, and why the lines must be in this order."
+            type_instructions = f" In this particular problem, the student was tasked with re-arranging each line so the code runs correctly and produces an output of {correct_answer}, which the student has done successfully."
+            explanation_focus = " Please focus your explanation on why the code produces this output."
 
-        query += restrictions1
+        query += type_instructions + explanation_focus + instructions1 + restrictions1
 
         temperature = 0.3
         message = utilities.chatgpt_query(query, temperature)
+        print (f'MESSAGE BEFORE MODIFICATION: {message}')
+
+        check_instructions = " I need you to determine if the explanation for the code is sufficient. Could a Python beginner or intermediate understand the explanation? Is it clearly explained? Is it describing what the code is actually doing? etc. Please output \"Sufficient.\" and nothing else if the explanation is okay as-is. If the explanation is not okay, then provide a better explanation. Do not introduce the explanation, just provide it. The limit for this explanation is 150 words."
+        explanation_check = query + type_instructions + check_instructions
+        check_message = utilities.anthropic_query(query, temperature)
+        if check_message[0] != "S":
+            #message is not okay. modify message
+            message = check_message
+
+        print (f'MESSAGE AFTER MODIFICATION: {message}')
 
         return JsonResponse({"success": True, "message": message})
 
