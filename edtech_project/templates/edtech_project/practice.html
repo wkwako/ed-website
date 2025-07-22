@@ -46,7 +46,7 @@
      * Called when a user clicks a difficulty button ("Easy", "Medium", "Hard").
      * Generates a problem for the user to solve.
      */
-    function fetchChatGPTResponse(message, difficultyLevel, retries=3, delay=1000) {
+    function fetchChatGPTResponse(difficultyLevel, retries=3, delay=1000) {
 
         //disables problem generation until current request is processed (and shown to user)
         if (isFetching) {
@@ -100,8 +100,7 @@
 
             //sends these variables to /practice/
             body: JSON.stringify({
-                message: message,
-                difficulty_level: difficultyLevel
+                difficulty_level: difficultyLevel,
             })
         })
 
@@ -359,7 +358,7 @@
             // Retry with exponential backoff
             console.log(`Retrying... Attempts left: ${retries}`);
             setTimeout(() => {
-                fetchChatGPTResponse(message, difficultyLevel, retries - 1, delay * 2); // Increase delay for next attempt
+                fetchChatGPTResponse(difficultyLevel, retries - 1, delay * 2); // Increase delay for next attempt
             }, delay);
 
             } else {
@@ -461,9 +460,9 @@ function setDifficulty(level) {
 /**
  * Handles the button press; gets response from backend
  */ 
-function handleButtonPress(query, difficultyLevel) {
+function handleButtonPress(difficultyLevel) {
     //retrieve session data, see which prompt was generated
-    fetchChatGPTResponse(query, difficultyLevel)
+    fetchChatGPTResponse(difficultyLevel)
     setDifficulty(difficultyLevel)
     
 }
@@ -584,11 +583,11 @@ function generateExplanation() {
 </script>
 
 {% csrf_token %}
-<button class="button-difficulty" id="button-easy" data-difficulty="Easy" onclick="handleButtonPress('I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice in reading code. Here are the general specifications: The code must between 5 and 10 lines long. The code must not have any annotations or comments. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. At the end of the code, there should be a line that causes it to output a number or phrase (a student should be able to type its output into a text box for practicing purposes). The output should be limited to 15 characters or fewer. It should not be obvious what the code is doing, but it should be decipherable after looking at it for a few minutes. Here are some examples of what the code could do: Ex1: shift an element in a list/array to the right/left by a certain number of spaces, Ex2: generate a Fibonacci sequence, Ex3: create a basic graph structure, then perform an operation on it, Ex4: edit a string in a unique way, Ex5: do something with prime numbers. I expect you to pull from physics, chemistry, biology, and computer science for inspiration. Please randomly choose one these fields. Please generate a piece of code with these specifications. These are only examples, I expect you to create a new example that is unique. Internally, please generate a random number between 1 and 10, inclusive. Please determine with 0.5 probability whether or not the example uses a for loop. Please store the output of the code in a variable called \'output\', where the last line prints the output variable. Do not include descriptions of the code. Do not include input() functions in the code. Do not use random() functions.', 'Easy')"> Easy </button>
+<button class="button-difficulty" id="button-easy" data-difficulty="Easy" onclick="handleButtonPress('Easy')"> Easy </button>
 {% csrf_token %}
-<button class="button-difficulty" id="button-medium" data-difficulty="Medium" onclick="handleButtonPress('I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice in reading code. Here are the general specifications: The code must between 10 and 30 lines long. The code must not have any annotations or comments. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. At the end of the code, there should be a line that causes it to output a number or phrase (a student should be able to type its output into a text box for practicing purposes). The output should be limited to 15 characters or fewer. It should not be obvious what the code is doing, but it should be decipherable after looking at it for a few minutes. Here are some examples of what the code could do: Ex1: shift an element in a list/array to the right/left by a certain number of spaces, Ex2: generate a Fibonacci sequence, Ex3: create a basic graph structure, then perform an operation on it, Ex4: edit a string in a unique way, Ex5: do something with prime numbers. I expect you to pull from physics, chemistry, biology, and computer science for inspiration. Please randomly choose one these fields. Please generate a piece of code with these specifications. These are only examples, I expect you to create a new example that is unique. Internally, please generate a random number between 1 and 10, inclusive. Please determine with 0.5 probability whether or not the example uses a for loop. Please store the output of the code in a variable called \'output\', where the last line prints the output variable. Do not include descriptions of the code. Do not include input() functions in the code. Do not use random() functions.', 'Medium')"> Medium </button>
+<button class="button-difficulty" id="button-medium" data-difficulty="Medium" onclick="handleButtonPress('Medium')"> Medium </button>
 {% csrf_token %}
-<button class="button-difficulty" id="button-hard" data-difficulty="Hard" onclick="handleButtonPress('I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice in reading code. Here are the general specifications: The code must between 50 and 100 lines long. The code must not have any annotations or comments. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. At the end of the code, there should be a line that causes it to output a number or phrase (a student should be able to type its output into a text box for practicing purposes). The output should be limited to 15 characters or fewer. It should not be obvious what the code is doing, but it should be decipherable after looking at it for a few minutes. Here are some examples of what the code could do: Ex1: shift an element in a list/array to the right/left by a certain number of spaces, Ex2: generate a Fibonacci sequence, Ex3: create a basic graph structure, then perform an operation on it, Ex4: edit a string in a unique way, Ex5: do something with prime numbers. I expect you to pull from physics, chemistry, biology, and computer science for inspiration. Please randomly choose one these fields. Please generate a piece of code with these specifications. These are only examples, I expect you to create a new example that is unique. Internally, please generate a random number between 1 and 10, inclusive. Please determine with 0.5 probability whether or not the example uses a for loop. Please store the output of the code in a variable called \'output\', where the last line prints the output variable. Do not include descriptions of the code. Do not include input() functions in the code. Do not use random() functions.', 'Hard')"> Hard </button>
+<button class="button-difficulty" id="button-hard" data-difficulty="Hard" onclick="handleButtonPress('Hard')"> Hard </button>
 
 {% csrf_token %}
 <button class="reset-problem" id="reset-problem" style="visibility: hidden" onclick="handleResetProblem()"> Reset Problem</button>

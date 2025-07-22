@@ -44,7 +44,7 @@ def practice(request):
         try:
             request.session["correct_answer"] = None
             body = json.loads(request.body)
-            query = body.get("message", "An error has occurred when generating the query.")
+            #query = body.get("message", "An error has occurred when generating the query.")
             temperature = 1.0
             difficultyLevel = body.get('difficulty_level', 'undefined')
             #print (difficultyLevel)
