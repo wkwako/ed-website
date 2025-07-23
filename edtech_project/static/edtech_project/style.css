@@ -12,9 +12,15 @@
     margin-left: auto;
     background: none;
     border: none;
+    cursor: pointer;
+    color: #e6fffb;
+    font-family: Georgia;
+    font-size: 15px;
+    letter-spacing: 0.5px;
 }
 
-#options-button ::after {
+/* Creates a triangle  */
+#options-button::after {
     content: "";
     display: inline-block;
     margin-left: 6px;
@@ -23,8 +29,18 @@
     height: 0;
     border-top: 4px solid transparent;
     border-bottom: 4px solid transparent;
-    border-left: 6px solid black;
+    border-left: 6px solid #e6fffb;
     cursor: pointer;
+    color: #e6fffb;
+    transition: transform 0.2 ease;
+
+    /* Triangle by default is one pixel too far down, so we need to adjust it*/
+    position: relative;
+    top: -1px;
+}
+
+#options-button.open::after {
+    transform: rotate(90deg);
 }
 
 #chatgpt-response {
