@@ -32,7 +32,7 @@
     border-left: 6px solid #e6fffb;
     cursor: pointer;
     color: #e6fffb;
-    transition: transform 0.2 ease;
+    transition: transform 0.2s ease;
 
     /* Triangle by default is one pixel too far down, so we need to adjust it*/
     position: relative;

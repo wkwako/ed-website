@@ -1,4 +1,5 @@
 
+//Adds method to retrieve csrf_token via cookies
 //START CODE FROM CHATGPT
 function getCookie(name) {
     let cookieValue = null;
@@ -17,9 +18,36 @@ function getCookie(name) {
 }
 
 const csrftoken = getCookie('csrftoken');
+
+
+//adds event listener for generation options panel, opens when clicked
+
+
+if (!window.optionsButtonListenerAdded) {
+    window.optionsButtonListenerAdded = true;
+
+    document.addEventListener("DOMContentLoaded", function () {
+        const button = document.getElementById('options-button');
+        const panel = document.getElementById('generation-options-box');
+
+        document.addEventListener('click', function (e) {
+            const clickedInside = button.contains(e.target) || panel.contains(e.target);
+
+            if (clickedInside) {
+                if (button.contains(e.target)) {
+                    button.classList.toggle('open');
+                    panel.style.display = button.classList.contains('open') ? 'block' : 'none';
+                }
+            } else {
+                button.classList.remove('open');
+                panel.style.display = 'none';
+            }
+        });
+    });
+}
+
 //END CODE FROM CHATGPT
 
-//let currentFetchController = null;
 let initial_chatGPTresponse = "";
 
 //debounce logic
