@@ -30,7 +30,20 @@
 {% endblock %}
 
 {% block content %}
-<h3 class="practice-description">Please use the buttons below to generate problems.</h3> <br>
+
+
+<div id="instructions-and-options-box">
+    <h3 class="practice-description">Please use the buttons below to generate problems.</h3>
+    <button id="options-button"> Generation Options </button>
+    <div id="generation-options-box">
+        <div id="generation-options-panel">
+        </div>
+    </div>
+</div>
+
+
+
+<br>
 
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
@@ -581,6 +594,8 @@ function generateExplanation() {
 }
 
 </script>
+
+
 
 {% csrf_token %}
 <button class="button-difficulty" id="button-easy" data-difficulty="Easy" onclick="handleButtonPress('Easy')"> Easy </button>

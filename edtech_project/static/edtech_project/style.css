@@ -1,3 +1,31 @@
+#instructions-and-options-box {
+    display: flex;
+    margin: 2px 4px;
+    padding: 0px;
+    /* Justify all content within container to start */
+    justify-content: flex-start;
+}
+
+#options-button {
+    align-self: center;
+    /* ...then set margin-left to auto which makes this single element look right justified*/
+    margin-left: auto;
+    background: none;
+    border: none;
+}
+
+#options-button ::after {
+    content: "";
+    display: inline-block;
+    margin-left: 6px;
+    vertical-align: middle;
+    width: 0;
+    height: 0;
+    border-top: 4px solid transparent;
+    border-bottom: 4px solid transparent;
+    border-left: 6px solid black;
+    cursor: pointer;
+}
 
 #chatgpt-response {
     padding-left: 1px;
@@ -88,6 +116,7 @@
     font-family: Roboto;
     letter-spacing: 0.5px;
     border-radius: 4px;
+    cursor: pointer;
 }
 
 #hints {
