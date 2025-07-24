@@ -396,6 +396,8 @@ function submitUserAnswer() {
     const hintsGroup = document.getElementById("hints-group");
     const resetProblem = document.getElementById("reset-problem");
     const feedbackMessage = document.getElementById("feedback");
+    let submitSkeleton = document.getElementById("submit-skeleton-loader");
+    submitSkeleton.style.display = 'inline-block';
 
     let url = "";
     let data = {
@@ -440,6 +442,7 @@ function submitUserAnswer() {
         })
         .then(response => response.json())
         .then(data => {
+            submitSkeleton.style.display = 'none';
             if (data.message.includes("Correct")) {
                 feedbackMessage.textContent = "Correct!";
                 feedbackMessage.style.color = "#6eff6e";

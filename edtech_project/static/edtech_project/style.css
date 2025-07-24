@@ -9,6 +9,7 @@
     transition: height 0.3s ease, width 0.3s ease;
     position: fixed;
     right: 5vh;
+    opacity: 0.98;
 
 }
 
@@ -111,6 +112,7 @@
     align-items: center;
     margin-top: 9px;
     margin-bottom: 9px;
+    min-height: 70px;
 }
 
 #feedback {
@@ -256,13 +258,14 @@ pre, pre code.language-python {
     color: #e6fffb;
 }
 
+/* Start skeleton loader information */
 #hints-skeleton-loader, #explanation-skeleton-loader {
     display: none;
     width: 1000px;
     height: 50px;
 }
 
-.hints-skeleton, .explanation-skeleton {
+.hints-skeleton, .explanation-skeleton, .submit-skeleton {
     background-color: #b0b0b08f;
     width: 80%;
     height: 25%;
@@ -271,7 +274,7 @@ pre, pre code.language-python {
     animation: blink 0.8s infinite alternate ease-in-out;
 }
 
-.hints-skeleton-short, .explanation-skeleton-short {
+.hints-skeleton-short, .explanation-skeleton-short, .submit-skeleton-short {
     background-color: #b0b0b08f;
     width: 60%;
     height: 25%;
@@ -283,6 +286,18 @@ pre, pre code.language-python {
 #skeleton-loader {
     display: none;
 }
+
+#submit-skeleton-loader {
+    display: none;
+    width: 1000px;
+    height: 50px;
+    align-items: center;
+    transform: translateY(4px);
+}
+
+
+
+
 
 /* START CODE FROM CHATGPT */
 .skeleton {
