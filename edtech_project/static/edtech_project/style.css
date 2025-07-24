@@ -1,22 +1,23 @@
 #generation-options-box {
-  overflow: hidden;
-  max-height: 0;
-  transition: max-height 0.3s cubic-bezier(0, 1, 0, 1); /* fast close */
-  width: 80vh;
-  position: fixed;
-  top: 100px;
-  right: 5vh;
-  background: #5d515d;
-  border-left: 1px solid transparent;
-  border-right: 1px solid transparent;
-  z-index: 1000;
+    height: 0vh;
+    z-index: 1000;
+    background: #5d515d;
+    top: 100px;
+    height: 0px;
+    width: 80vh;
+    overflow: hidden;
+    transition: height 0.3s ease, width 0.3s ease;
+    position: fixed;
+    right: 5vh;
+
 }
 
 #generation-options-box.open {
-  max-height: 1000px; /* or something large enough for your content */
-  transition: max-height 0.6s ease-in-out; /* smooth open */
-  border-left-color: #ccc;
-  border-right-color: #ccc;
+    height: 80vh;
+    width: 80vh;
+    border-left: 2px solid #ccc;
+    border-right: 2px solid #ccc;
+    transition: height 0.3s ease;
 }
 
 #instructions-and-options-box {
