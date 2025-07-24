@@ -1,3 +1,24 @@
+#generation-options-box {
+  overflow: hidden;
+  max-height: 0;
+  transition: max-height 0.3s cubic-bezier(0, 1, 0, 1); /* fast close */
+  width: 80vh;
+  position: fixed;
+  top: 100px;
+  right: 5vh;
+  background: #5d515d;
+  border-left: 1px solid transparent;
+  border-right: 1px solid transparent;
+  z-index: 1000;
+}
+
+#generation-options-box.open {
+  max-height: 1000px; /* or something large enough for your content */
+  transition: max-height 0.6s ease-in-out; /* smooth open */
+  border-left-color: #ccc;
+  border-right-color: #ccc;
+}
+
 #instructions-and-options-box {
     display: flex;
     margin: 2px 4px;

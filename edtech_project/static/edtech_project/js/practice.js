@@ -35,12 +35,12 @@ if (!window.optionsButtonListenerAdded) {
 
             if (clickedInside) {
                 if (button.contains(e.target)) {
-                    button.classList.toggle('open');
-                    panel.style.display = button.classList.contains('open') ? 'block' : 'none';
+                    const isOpen = button.classList.toggle('open');
+                    panel.classList.toggle('open', isOpen);
                 }
             } else {
                 button.classList.remove('open');
-                panel.style.display = 'none';
+                panel.classList.remove('open');
             }
         });
     });
