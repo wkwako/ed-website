@@ -1,26 +1,35 @@
 
 /* Generation options panel headers and container */
 #generation-options-box {
-    height: 0vh;
+    max-height: 0vh;
     z-index: 1000;
     background: #5d515d;
     top: 100px;
-    height: 0px;
-    width: 80vh;
-    overflow: hidden;
-    transition: height 0.3s ease, width 0.3s ease;
+    width: 80vw;
+    max-width: 900px;
+    min-width: 200px;
+    overflow-y: hidden;
+    overflow-x: auto;
+    transition: max-height 0.3s ease, border-color 0.3s ease, opacity 0.3s ease;
     position: fixed;
     right: 5vh;
-    opacity: 0.98;
+    opacity: 0.97;
+    border-left: 1px solid #4f4f4f;
+    border-right: 1px solid #4f4f4f;
+    line-height: 1.5;
+}
 
+#generation-options-box * {
+    word-wrap: break-word;
+    word-break: break-word;
+    overflow-wrap: break-word;
 }
 
 #generation-options-box.open {
-    height: 80vh;
-    width: 80vh;
+    max-height: 80vh;
     border-left: 1px solid #4f4f4f;
     border-right: 1px solid #4f4f4f;
-    transition: height 0.3s ease;
+    transition: max-height 0.5s ease;
 }
 
 #instructions-and-options-box {
@@ -77,16 +86,63 @@
 
 /* Generation options panel contents */
 
+.options-panel-title {
+    text-align: center;
+    color: #e6fffb;
+}
+
 #structures {
     flex: 1;
     background-color: #2e1924;
+    color: #e6fffb;
+    font-family: Georgia;
+    justify-content: center;
+    padding-left: 10px;
 
 }
 
-#subjects {
+#subjects-container {
     flex: 2;
+    display: flex;
+    flex-direction: column;
     background-color: #2e1924;
+}
 
+#subjects {
+    display: flex;
+    flex: 1;
+    background-color: #2e1924;
+    color: #e6fffb;
+    font-family: Georgia;
+    padding-left: 10px;
+
+}
+
+input[type="checkbox"] {
+    vertical-align: middle; /* aligns checkbox better with label text */
+    position: relative;
+    height: 15px;
+    width: 15px;
+    cursor: pointer;
+    top: 3px;
+
+}
+
+.subjects-column {
+    display: flex;
+    flex-direction: column;
+    flex: 1;
+}
+
+.checkbox-row {
+  display: flex;
+  align-items: center;
+  gap: 6px; /* spacing between checkbox and label */
+  margin-bottom: 4px; /* space between rows */
+}
+
+label {
+    margin-bottom: 4px;
 }
 
 #chatgpt-response {

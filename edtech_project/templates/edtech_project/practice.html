@@ -41,15 +41,49 @@
 <div id="generation-options-box">
     <div id="generation-options-panel">
         <div id="structures">
-            <h3 class="options-panel-title">Structures</h3>
-
+            <h3 class="options-panel-title">Structures/syntax</h3>
+            <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="functions"> </label> Functions </div>
+            <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="classes"> </label> Classes </div>
+            <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="comprehensions"> </label> List/dict comprehensions </div>
+            <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="nested-loops"> </label> Nested 'for' loops </div>
+            <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="trees"> </label> Trees </div>
+            <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="graphs"> </label> Graphs </div>
+            <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="recursion"> </label> Recursion </div>
+            <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="generators"> </label> Generators </div>
+            <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="conditional-chains"> </label> Conditional chains </div>
+            <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="lambda-functions"> </label> Lambda functions </div>
+            <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="args-and-kwargs"> </label> Args and Kwargs </div>
         </div>
 
-        <div id="subjects">
+        <div id="subjects-container">
             <h3 class="options-panel-title">Subjects</h3>
+            <div id="subjects">
+                <div class="subjects-column basic-subjects">
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="physics"> </label> Physics </div>
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="chemistry"> </label> Chemistry </div>
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="biology"> </label> Biology </div>
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="earth-science"> </label> Earth science </div>
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="computer-science"> </label> Computer science </div>
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="math"> </label> Math </div>
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="logic-and-reasoning"> </label> Logic and reasoning </div>
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="linguistics"> </label> Linguistics </div>
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="geography"> </label> Geography </div> 
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="medicine-anatomy"> </label> Medicine/Antomy </div> 
+                </div>
+                <div class="subjects-column advanced-subjects">
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="adv-physics"> </label> Advanced physics </div>
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="adv-chemistry"> </label> Advanced chemistry </div> 
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="adv-biology"> </label> Advanced biology </div> 
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="adv-earth-science"> </label> Advanced earth science </div> 
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="adv-computer-science"> </label> Advanced CS </div> 
+                    <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="adv-math"> </label> Advanced math </div>
+                </div>
+            </div>
 
+            
         </div>
 
+        
     </div>
 </div>
 
