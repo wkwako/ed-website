@@ -1,5 +1,5 @@
 
-/* Generation options panel */
+/* Generation options panel headers and container */
 #generation-options-box {
     height: 0vh;
     z-index: 1000;
@@ -27,14 +27,12 @@
     display: flex;
     margin: 2px 4px;
     padding: 0px;
-    /* Justify all content within container to start */
-    justify-content: flex-start;
+    justify-content: flex-start; /* Justify all content within container to start */
 }
 
 #options-button {
     align-self: center;
-    /* ...then set margin-left to auto which makes this single element look right justified*/
-    margin-left: auto;
+    margin-left: auto; /* ...then set margin-left to auto which makes this single element look right justified*/
     background: none;
     border: none;
     cursor: pointer;
@@ -44,8 +42,7 @@
     letter-spacing: 0.5px;
 }
 
-/* Creates a triangle  */
-#options-button::after {
+#options-button::after { /* Creates a triangle  */
     content: "";
     display: inline-block;
     margin-left: 6px;
@@ -58,9 +55,7 @@
     cursor: pointer;
     color: #e6fffb;
     transition: transform 0.2s ease;
-
-    /* Triangle by default is one pixel too far down, so we need to adjust it*/
-    position: relative;
+    position: relative; /* Triangle by default is one pixel too far down, so we need to adjust it*/
     top: -1px;
 }
 
@@ -79,6 +74,8 @@
     width: 100%;
     box-sizing: border-box;
 }
+
+/* Generation options panel contents */
 
 #structures {
     flex: 1;
@@ -100,8 +97,8 @@
 }
 
 .links {
-  color: #e6fffb; /* or whatever color matches your site */
-  text-decoration: underline; /* optional */
+  color: #e6fffb;
+  text-decoration: underline;
 }
 
 #explanation {
@@ -112,9 +109,7 @@
 }
 
 #hints code {
-    /* START CODE FROM CHATGPT */
     font-family: 'Courier New', Courier, monospace;
-    /* END CODE FROM CHATGPT */
     color: #e6fffb;
 }
 
