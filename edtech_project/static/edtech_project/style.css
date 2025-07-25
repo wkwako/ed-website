@@ -1,3 +1,5 @@
+
+/* Generation options panel */
 #generation-options-box {
     height: 0vh;
     z-index: 1000;
@@ -16,8 +18,8 @@
 #generation-options-box.open {
     height: 80vh;
     width: 80vh;
-    border-left: 2px solid #ccc;
-    border-right: 2px solid #ccc;
+    border-left: 1px solid #4f4f4f;
+    border-right: 1px solid #4f4f4f;
     transition: height 0.3s ease;
 }
 
@@ -64,6 +66,30 @@
 
 #options-button.open::after {
     transform: rotate(90deg);
+}
+
+#generation-options-panel {
+    z-index: 1000;
+    display: flex;
+    flex-direction: row;
+    padding: 12px;
+    gap: 40px;
+    background-color: #37242e;
+    height: 100%;
+    width: 100%;
+    box-sizing: border-box;
+}
+
+#structures {
+    flex: 1;
+    background-color: #2e1924;
+
+}
+
+#subjects {
+    flex: 2;
+    background-color: #2e1924;
+
 }
 
 #chatgpt-response {
@@ -294,9 +320,6 @@ pre, pre code.language-python {
     align-items: center;
     transform: translateY(4px);
 }
-
-
-
 
 
 /* START CODE FROM CHATGPT */
