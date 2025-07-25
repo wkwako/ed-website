@@ -20,9 +20,10 @@ function getCookie(name) {
 const csrftoken = getCookie('csrftoken');
 
 
+
+let loaderTimeout = null;
+
 //adds event listener for generation options panel, opens when clicked
-
-
 if (!window.optionsButtonListenerAdded) {
     window.optionsButtonListenerAdded = true;
 
@@ -397,7 +398,16 @@ function submitUserAnswer() {
     const resetProblem = document.getElementById("reset-problem");
     const feedbackMessage = document.getElementById("feedback");
     let submitSkeleton = document.getElementById("submit-skeleton-loader");
-    submitSkeleton.style.display = 'inline-block';
+    //submitSkeleton.style.display = 'inline-block';
+
+    // Delay showing the submit skeleton loader
+    let loaderShown = false;
+    let loaderTimeout = setTimeout(() => {
+        if (!loaderShown) {
+            submitSkeleton.style.display = 'inline-block';
+            loaderShown = true;
+        }
+    }, 200);
 
     let url = "";
     let data = {
@@ -442,7 +452,9 @@ function submitUserAnswer() {
         })
         .then(response => response.json())
         .then(data => {
+            clearTimeout(loaderTimeout);
             submitSkeleton.style.display = 'none';
+            loaderShown = false;
             if (data.message.includes("Correct")) {
                 feedbackMessage.textContent = "Correct!";
                 feedbackMessage.style.color = "#6eff6e";
@@ -462,6 +474,9 @@ function submitUserAnswer() {
         });
 
     } catch (error) {
+        clearTimeout(loaderTimeout);
+        submitSkeleton.style.display = 'none';
+        loaderShown = false;
         console.error("Error during submission:", error);
     }
 }
