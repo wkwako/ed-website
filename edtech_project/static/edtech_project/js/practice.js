@@ -19,11 +19,42 @@ function getCookie(name) {
 
 const csrftoken = getCookie('csrftoken');
 
+/* Adds listeners for sliders, retrieves values */
+window.addEventListener('DOMContentLoaded', () => {
+    const difficultySlider = document.getElementById('difficulty-slider');
+    if (difficultySlider) {
+        // Restore saved value
+        const storedValue = localStorage.getItem('difficultySlider');
+        if (storedValue !== null) {
+            difficultySlider.value = storedValue;
+        }
+
+        // Save on change
+        difficultySlider.addEventListener('input', () => {
+            localStorage.setItem('difficultySlider', difficultySlider.value);
+        });
+    }
+
+    const problemLengthSlider = document.getElementById('problem-length-slider');
+    if (problemLengthSlider) {
+        const storedValue = localStorage.getItem('problemLengthSlider');
+        if (storedValue !== null) {
+            problemLengthSlider.value = storedValue;
+        }
+
+        problemLengthSlider.addEventListener('input'), () => {
+            localStorage.setItem('problemLengthSlider', problemLengthSlider.value);
+        }
+    }
+
+});
 
 
+
+//variable for submitSkeleton delay
 let loaderTimeout = null;
 
-//adds event listener for generation options panel, opens when clicked
+//adds event listener for generation options panel to open when clicked
 if (!window.optionsButtonListenerAdded) {
     window.optionsButtonListenerAdded = true;
 
@@ -49,11 +80,12 @@ if (!window.optionsButtonListenerAdded) {
 
 //END CODE FROM CHATGPT
 
-let initial_chatGPTresponse = "";
+
 
 //debounce logic
 let isFetching = false;
 
+let initial_chatGPTresponse = "";
 /** 
  * Called when a user clicks a difficulty button ("Easy", "Medium", "Hard").
  * Generates a problem for the user to solve.
@@ -66,6 +98,7 @@ function fetchChatGPTResponse(difficultyLevel, retries=3, delay=1000) {
         return;
     }
 
+    //debounce logic
     isFetching = true;
 
     //Define variables for relevant elements
