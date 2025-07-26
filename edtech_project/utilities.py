@@ -9,9 +9,10 @@ from .models import UserHistory
 import random
 import re
 import hashlib
-import anthropic
 import asyncio
 import aiohttp
+import anthropic
+
 
 def validate_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
     """Queries ChatGPT, then validates the result. Output is a tuple of the form (bool, str, str, str), which maps to
