@@ -42,12 +42,31 @@ window.addEventListener('DOMContentLoaded', () => {
             problemLengthSlider.value = storedValue;
         }
 
-        problemLengthSlider.addEventListener('input'), () => {
+        problemLengthSlider.addEventListener('input', () => {
             localStorage.setItem('problemLengthSlider', problemLengthSlider.value);
-        }
+        });
     }
 
+    /* Adds listeners for checkboxes, retrieves values */
+    const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+    allCheckboxes.forEach(checkbox => {
+        checkbox.addEventListener('change', () => {
+        const state = {};
+        allCheckboxes.forEach(cb => state[cb.value] = cb.checked);
+        localStorage.setItem('checkboxStates', JSON.stringify(state));
+        });
+    });
+
+    const savedStates = JSON.parse(localStorage.getItem('checkboxStates') || '{}');
+    allCheckboxes.forEach(cb => {
+        if (savedStates.hasOwnProperty(cb.value)) {
+            cb.checked = savedStates[cb.value];
+        }
+    });
 });
+
+
+
 
 
 
