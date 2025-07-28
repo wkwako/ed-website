@@ -13,6 +13,7 @@ import asyncio
 import aiohttp
 import anthropic
 import copy
+from . import static_variables
 
 
 def validate_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
@@ -437,7 +438,8 @@ def process_user_selections(user_selections):
     return subject_sentence, constraint_sentence, difficulty_sentence, problem_length_sentence
 
 def process_user_selections_subjects(user_selections):
-    pass
+    allowed_subjects = []
+
 
 def process_user_selections_structures_and_difficulty(user_selections):
     #TODO: create a function that validates that what is returned matches these specifications
