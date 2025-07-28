@@ -188,6 +188,32 @@ input[type="range"] {
     background-color: #2e1924;
 }
 
+#presets {
+    align-items: center;
+    display: flex;
+    flex-direction: row;
+    justify-content: center;
+}
+
+.preset-button {
+    text-align: center;
+    background: #400456;
+    color: #dddddd;
+    padding: 8px 12px;
+    margin: 0px 15px;
+    font-family: Roboto;
+    letter-spacing: 0.5px;
+    border-radius: 4px;
+    cursor: pointer;
+
+}
+
+.preset-button:active {
+    box-shadow: 0 2px 4px 0 rgba(0,0,0,.5);
+    background-color: #280335;
+    border-color: transparent;
+}
+
 
 /* Chatgpt stuff */
 

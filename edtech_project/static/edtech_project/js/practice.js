@@ -48,27 +48,23 @@ window.addEventListener('DOMContentLoaded', () => {
     }
 
     /* Adds listeners for checkboxes, retrieves values */
+    const checkboxStates = JSON.parse(localStorage.getItem('checkboxStates') || '{}');
+
     const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
-    allCheckboxes.forEach(checkbox => {
-        checkbox.addEventListener('change', () => {
-        const state = {};
-        allCheckboxes.forEach(cb => state[cb.value] = cb.checked);
-        localStorage.setItem('checkboxStates', JSON.stringify(state));
+    allCheckboxes.forEach(cb => {
+        // Restore saved state
+        if (checkboxStates.hasOwnProperty(cb.value)) {
+            cb.checked = checkboxStates[cb.value];
+        }
+
+        // Only update this checkbox on change
+        cb.addEventListener('change', () => {
+            checkboxStates[cb.value] = cb.checked;
+            localStorage.setItem('checkboxStates', JSON.stringify(checkboxStates));
         });
     });
 
-    const savedStates = JSON.parse(localStorage.getItem('checkboxStates') || '{}');
-    allCheckboxes.forEach(cb => {
-        if (savedStates.hasOwnProperty(cb.value)) {
-            cb.checked = savedStates[cb.value];
-        }
-    });
 });
-
-
-
-
-
 
 //variable for submitSkeleton delay
 let loaderTimeout = null;
@@ -153,6 +149,21 @@ function fetchChatGPTResponse(difficultyLevel, retries=3, delay=1000) {
     chatResponseDiv.autocomplete = "false";
     chatResponseDiv.spellcheck = false;
 
+    const difficultySlider = document.getElementById('difficulty-slider');
+    const problemLengthSlider = document.getElementById('problem-length-slider');
+    const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+    const checkboxStates = {};
+    allCheckboxes.forEach(cb => {
+        checkboxStates[cb.value] = cb.checked;
+    })
+
+    const userSelections = {
+        difficulty_level_slider: difficultySlider ? difficultySlider.value : null,
+        problem_length_slider: problemLengthSlider ? problemLengthSlider.value : null,
+        checkbox_states: checkboxStates,
+
+    }
+
     //direct to /practice/, see urls.py for views.py function call
     fetch('/practice/', {
         method: 'POST',
@@ -166,6 +177,7 @@ function fetchChatGPTResponse(difficultyLevel, retries=3, delay=1000) {
         //sends these variables to /practice/
         body: JSON.stringify({
             difficulty_level: difficultyLevel,
+            user_selections: userSelections,
         })
     })
 

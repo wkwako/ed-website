@@ -49,8 +49,19 @@ def practice(request):
             difficultyLevel = body.get('difficulty_level', 'undefined')
             #print (difficultyLevel)
 
+            user_selections = body.get('user_selections', None)
+            # print (f'USER SELECTIONS: {user_selections}')
+            # print (f'TYPE OF USER SELECTIONS: {type(user_selections)}')
+            # print (user_selections['difficulty_level'])
+            # print (user_selections['checkbox_states']['functions'])
+
+            #print (f'USER SELECTIONS: {user_selections}')
+
+            #print (utilities.process_user_selections_problem_length(user_selections))
+            print (utilities.process_user_selections_structures_and_difficulty(user_selections))
+
             #END CODE FROM CHATGPT
-            problem_type,query = utilities.get_query(difficultyLevel)
+            problem_type,query = utilities.get_query(difficultyLevel, user_selections)
 
             #set problem text to None
             request.session["problem_text"] = None

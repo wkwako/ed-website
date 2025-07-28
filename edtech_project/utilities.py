@@ -12,6 +12,7 @@ import hashlib
 import asyncio
 import aiohttp
 import anthropic
+import copy
 
 
 def validate_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
@@ -402,12 +403,14 @@ def query_fill_in_vars(difficultyLevel):
 
     return query
 
-def get_query(difficultyLevel) -> tuple[str, str]:
+def get_query(difficultyLevel, user_selections) -> tuple[str, str]:
     """Given the difficultyLevel, randomizes the kind of problem received and returns its query.
        Returns a tuple[str,str], where the first string is the problem type and the second is the query."""
     problem_int = random.randint(2,2) #determines which problems will be generated
     problem_type = ""
     query = ""
+
+    #subject, constraints = process_user_selections(user_selections)
 
     if problem_int == 1:
         problem_type = "determine_output" #standard problem
@@ -423,6 +426,75 @@ def get_query(difficultyLevel) -> tuple[str, str]:
 
     return problem_type, query
 
+def process_user_selections(user_selections):
+    subject_sentence = ""
+    constraint_sentence = ""
+    difficulty_sentence = ""
+    problem_length_sentence = ""
+
+    #grab
+
+    return subject_sentence, constraint_sentence, difficulty_sentence, problem_length_sentence
+
+def process_user_selections_subjects(user_selections):
+    pass
+
+def process_user_selections_structures_and_difficulty(user_selections):
+    #TODO: create a function that validates that what is returned matches these specifications
+
+    allowed_structures = []
+    disallowed_structures = []
+    count = 0
+    
+    #populates allowed_structures and disallowed_structures
+    for key, value in user_selections['checkbox_states'].items():
+        if count > 10:
+            break
+        formatted_key = key.replace("-", " ")
+        if value == True:
+            allowed_structures.append(formatted_key)
+        else:
+            disallowed_structures.append(formatted_key)
+        count += 1
+
+    selected_structures = []
+    difficulty_level = int(user_selections['difficulty_level_slider'])
+    allowed_structures_permanent = copy.deepcopy(allowed_structures)
+
+    #for each difficulty level, select one structure at random
+    while len(allowed_structures) >= difficulty_level:        
+        chosen_index = random.randint(0,len(allowed_structures)-1)
+        selected_structures.append(allowed_structures[chosen_index])
+        del allowed_structures[chosen_index]
+    
+    disallowed_structures.extend(allowed_structures)
+
+    #join allowed structures and disallowed structures
+    structure_fragment_positive = ", ".join(selected_structures)
+    structure_fragment_negative = ", ".join(disallowed_structures)
+
+    if not allowed_structures_permanent:
+        return f"Please do not use ANY of these structures in the code: {structure_fragment_negative}."
+    
+    return f"Please use ALL of these structures in the code (one or more of each): {structure_fragment_positive}. Please do not use ANY of these structures in the code: {structure_fragment_negative}."
+
+def process_user_selections_difficulty(user_selections, available_structures):
+    #while len(available_structures) >= difficulty_level:
+    pass
+
+def process_user_selections_problem_length(user_selections):
+    problem_length = int(user_selections['problem_length_slider'])
+    #might want to adjust these values so the gap is relatively wider on lower lengths,
+    #and relatively narrower on higher lengths (10-13 vs 120-130, for example)
+    base_start = 10
+    base_end = 13
+    mod1 = 0.95
+    mod2 = 1.05
+    starting_length = int(base_start*problem_length*mod1)
+    ending_length = int(base_end*problem_length*mod2)
+
+    return f" The length of the problem should be between {starting_length} and {ending_length} lines."
+    
 def select_domain(CS_chance,math_chance,science_chance):
     """Selects the domain of CS, math, and science, provided probabilities.
        science_chance is purposefully not used and is for visibility only."""
