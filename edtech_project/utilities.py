@@ -439,32 +439,36 @@ def process_user_selections(user_selections):
 
 def process_user_selections_subjects(user_selections):
     allowed_domains = []
+    count = 0
     
-    #TODO: populate allowed_domains here
+    #populates allowed_domains
+    for key, value in user_selections['checkbox_states'].items():
+        if count <= 10:
+            count += 1
+            continue
+        if value == True:
+            allowed_domains.append(key)
+        count += 1
 
-    #picks a domain
+    print (f"ALLOWED DOMAINS: {allowed_domains}")
+    
+    #randomly picks a domain
     chosen_domain = allowed_domains[random.randint(0,len(allowed_domains)-1)]
 
-
+    #randomly selects a subfield within the domain
     subjects = static_variables.subfield_info[chosen_domain]["subjects"]
     chosen_subject = subjects[random.randint(0,len(subjects)-1)]
 
+    #randomly selects a concept within the domain
     concepts = static_variables.subfield_info[chosen_domain]["concepts"] + static_variables.interactions["general_concepts"]
     chosen_concept = concepts[random.randint(0,len(concepts)-1)]
 
+    #randomly selects a question type within the domain
     q_types = static_variables.subfield_info[chosen_domain]["q_types"] + static_variables.interactions["general_q_types"]
     chosen_q_type = q_types[random.randint(0,len(q_types)-1)]
 
+    #turns chosen attributes into sentence
     return f" Use an example from {chosen_domain} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
-
-
-    #after allowed_subjects is populated, pick one at random
-    #then look to static_variables.subfield_info. randomly pick one subfield from static_variables.subfield_info[picked_subject]["subjects"]
-    #then random pick concept from static_variables.subfield_info[picked_subject]["concepts"] + static_variables.interactions["concepts"]
-    #then 
-
-
-
 
 def process_user_selections_structures_and_difficulty(user_selections):
     #TODO: create a function that validates that what is returned matches these specifications

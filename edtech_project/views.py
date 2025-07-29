@@ -55,7 +55,7 @@ def practice(request):
             # print (user_selections['difficulty_level'])
             # print (user_selections['checkbox_states']['functions'])
 
-            #print (f'USER SELECTIONS: {user_selections}')
+            print (f'USER SELECTIONS: {user_selections}')
 
             #print (utilities.process_user_selections_problem_length(user_selections))
             print (utilities.process_user_selections_structures_and_difficulty(user_selections))
