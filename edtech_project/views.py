@@ -59,6 +59,7 @@ def practice(request):
 
             #print (utilities.process_user_selections_problem_length(user_selections))
             print (utilities.process_user_selections_structures_and_difficulty(user_selections))
+            print (utilities.process_user_selections_subjects(user_selections))
 
             #END CODE FROM CHATGPT
             problem_type,query = utilities.get_query(difficultyLevel, user_selections)

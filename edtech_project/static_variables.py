@@ -1,4 +1,4 @@
-subfields = {
+subfield_info = {
     'physics': {"subjects": ["basic mechanics",
                              "basic electromagnetism",
                              "basic lens magnification effects",
@@ -1304,7 +1304,7 @@ interactions = {
                          "assigning components to categories based on properties",
                          ],
 
-    'general_qtypes': ["checking conditions on each element",
+    'general_q_types': ["checking conditions on each element",
                        "filtering a collection based on rules",
                        "transforming each element in a collection",
                        "accumulating a result cross a loop",

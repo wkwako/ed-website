@@ -438,7 +438,32 @@ def process_user_selections(user_selections):
     return subject_sentence, constraint_sentence, difficulty_sentence, problem_length_sentence
 
 def process_user_selections_subjects(user_selections):
-    allowed_subjects = []
+    allowed_domains = []
+    
+    #TODO: populate allowed_domains here
+
+    #picks a domain
+    chosen_domain = allowed_domains[random.randint(0,len(allowed_domains)-1)]
+
+
+    subjects = static_variables.subfield_info[chosen_domain]["subjects"]
+    chosen_subject = subjects[random.randint(0,len(subjects)-1)]
+
+    concepts = static_variables.subfield_info[chosen_domain]["concepts"] + static_variables.interactions["general_concepts"]
+    chosen_concept = concepts[random.randint(0,len(concepts)-1)]
+
+    q_types = static_variables.subfield_info[chosen_domain]["q_types"] + static_variables.interactions["general_q_types"]
+    chosen_q_type = q_types[random.randint(0,len(q_types)-1)]
+
+    return f" Use an example from {chosen_domain} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
+
+
+    #after allowed_subjects is populated, pick one at random
+    #then look to static_variables.subfield_info. randomly pick one subfield from static_variables.subfield_info[picked_subject]["subjects"]
+    #then random pick concept from static_variables.subfield_info[picked_subject]["concepts"] + static_variables.interactions["concepts"]
+    #then 
+
+
 
 
 def process_user_selections_structures_and_difficulty(user_selections):
@@ -479,10 +504,6 @@ def process_user_selections_structures_and_difficulty(user_selections):
         return f"Please do not use ANY of these structures in the code: {structure_fragment_negative}."
     
     return f"Please use ALL of these structures in the code (one or more of each): {structure_fragment_positive}. Please do not use ANY of these structures in the code: {structure_fragment_negative}."
-
-def process_user_selections_difficulty(user_selections, available_structures):
-    #while len(available_structures) >= difficulty_level:
-    pass
 
 def process_user_selections_problem_length(user_selections):
     problem_length = int(user_selections['problem_length_slider'])
@@ -612,7 +633,8 @@ def select_subject(problem_type, CS_chance=75, math_chance=15, science_chance=10
                         change in kinetic energy
                         pendulum swings without damping
                         water level change from faucet
-                        change in mass,gravity effects""".split("\n")
+                        change in mass
+                        gravity effects""".split("\n")
 
             concepts = """position updates over time
                         simple force-based movement
