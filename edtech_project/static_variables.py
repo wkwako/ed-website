@@ -1,3 +1,28 @@
+
+instructions = {"base_query": "I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational and should help students practice reading code.",
+                "code_mode_output": {"do": ["Use i, j, and k for iterators in \"for\" loops.",
+                                            "Store the output of the code in a variable called \"output\", where the last line prints the output variable.",
+                                            "The number of iterations through the most nested for loop should never be more than 5 (if using for loops).",
+                                            "The output should be limited to 15 characters or fewer, and not more than one line long. The output must be something the user can type into a text box (not contain weird characters or symbols).",
+                                            ],
+                                     "do-not": ["Do not include descriptions of the code.",
+                                                "Do not use input() or random() functions in the code.",
+                                                "Do not include descriptions of, or introductions to, the code. Just respond with the code.",
+                                                ],
+                },
+                "code_mode_completion": {"do": ["Use i, j, and k for iterators in for loops.",
+                                                "The code should have docstrings following the PEP8 Python styling conventions. Write one docstring for each function and class that contains a short summary, descriptions of parameters, and the function return value (if applicable). Use \"Args\" and \"Returns\" for this.",
+                                                "All code must be wrapped in a function or a class."
+                                                ],
+                                         "do-not": ["Do not write any annotations for the code.",
+                                                    "Do not include descriptions of, or introductions to, the code. Just respond with the code.",
+                                                    "Do not write docstrings for __init__() functions.",
+                                                    ],
+                }
+
+                
+}
+
 subfield_info = {
     'physics': {"subjects": ["basic mechanics",
                              "basic electromagnetism",
@@ -1282,7 +1307,7 @@ subfield_info = {
                 },
 }
 
-interactions = {
+general_attributes = {
     'general_concepts': ["reversing values",
                          "counting specific elements",
                          "checking conditions",

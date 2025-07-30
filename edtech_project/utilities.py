@@ -404,6 +404,35 @@ def query_fill_in_vars(difficultyLevel):
 
     return query
 
+def get_query2(user_selections):
+    full_query = ""
+    problem_types = ["determine_output", "fill_in_vars", "drag_and_drop",]
+    problem_type = problem_types[random.randint(0, len(problem_types)-1)]
+
+    required_structures, disallowed_structures = process_user_selections_structures_and_difficulty(user_selections)
+    subject_request = process_user_selections_subjects(user_selections)
+    required_length = process_user_selections_problem_length(user_selections)
+
+    if problem_type in ["determine_output", "drag_and_drop"]:
+        must_do = "-" + "\n-".join(static_variables.instructions["code_mode_output"]["do"]) + "\n"
+        must_not_do = "-" + "\n-".join(static_variables.instructions["code_mode_output"]["do-not"]) + "\n"
+    elif problem_type in ["fill_in_vars"]:
+        must_do = "-" + "\n-".join(static_variables.instructions["code_mode_completion"]["do"]) + "\n"
+        must_not_do = "-" + "\n-".join(static_variables.instructions["code_mode_completion"]["do-not"]) + "\n"
+
+    constraints = " All of the requirements on this list must be met: \n" + must_do + required_structures + must_not_do + disallowed_structures
+    full_query = static_variables.instructions["base_query"] + constraints + "\n-" + subject_request + "\n-" + required_length
+
+    print (f"problem type: {problem_type}")
+    print (f"subject: {subject_request}")
+    print (f"problem length: {required_length}")
+    print (f"required structures: {required_structures}")
+    print (f"disallowed structures: {disallowed_structures}")
+
+    return problem_type, full_query
+
+
+
 def get_query(difficultyLevel, user_selections) -> tuple[str, str]:
     """Given the difficultyLevel, randomizes the kind of problem received and returns its query.
        Returns a tuple[str,str], where the first string is the problem type and the second is the query."""
@@ -426,16 +455,6 @@ def get_query(difficultyLevel, user_selections) -> tuple[str, str]:
         problem_type = "fix_incorrect_code" #correct errors in code
 
     return problem_type, query
-
-def process_user_selections(user_selections):
-    subject_sentence = ""
-    constraint_sentence = ""
-    difficulty_sentence = ""
-    problem_length_sentence = ""
-
-    #grab
-
-    return subject_sentence, constraint_sentence, difficulty_sentence, problem_length_sentence
 
 def process_user_selections_subjects(user_selections):
     allowed_domains = []
@@ -460,15 +479,15 @@ def process_user_selections_subjects(user_selections):
     chosen_subject = subjects[random.randint(0,len(subjects)-1)]
 
     #randomly selects a concept within the domain
-    concepts = static_variables.subfield_info[chosen_domain]["concepts"] + static_variables.interactions["general_concepts"]
+    concepts = static_variables.subfield_info[chosen_domain]["concepts"] + static_variables.general_attributes["general_concepts"]
     chosen_concept = concepts[random.randint(0,len(concepts)-1)]
 
     #randomly selects a question type within the domain
-    q_types = static_variables.subfield_info[chosen_domain]["q_types"] + static_variables.interactions["general_q_types"]
+    q_types = static_variables.subfield_info[chosen_domain]["q_types"] + static_variables.general_attributes["general_q_types"]
     chosen_q_type = q_types[random.randint(0,len(q_types)-1)]
 
     #turns chosen attributes into sentence
-    return f" Use an example from {chosen_domain} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
+    return f" Generate a problem from {chosen_domain} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
 
 def process_user_selections_structures_and_difficulty(user_selections):
     #TODO: create a function that validates that what is returned matches these specifications
@@ -505,9 +524,14 @@ def process_user_selections_structures_and_difficulty(user_selections):
     structure_fragment_negative = ", ".join(disallowed_structures)
 
     if not allowed_structures_permanent:
-        return f"Please do not use ANY of these structures in the code: {structure_fragment_negative}."
+        do = ""
+        do_not = f"Do not use ANY of these structures in the code: {structure_fragment_negative}."
     
-    return f"Please use ALL of these structures in the code (one or more of each): {structure_fragment_positive}. Please do not use ANY of these structures in the code: {structure_fragment_negative}."
+    else:
+        do = f"Use ALL of these structures in the code (one or more of each): {structure_fragment_positive}."
+        do_not = f"Please do not use ANY of these structures in the code: {structure_fragment_negative}."
+    
+    return do, do_not
 
 def process_user_selections_problem_length(user_selections):
     problem_length = int(user_selections['problem_length_slider'])
