@@ -15,6 +15,85 @@ import anthropic
 import copy
 from . import static_variables
 
+def detect_structures(code: str):
+    class StructureVisitor(ast.NodeVisitor):
+        def __init__(self):
+            self.found = {
+                "enumerate": False,
+                "zip": False,
+                "any_all": False,
+                "map_filter": False,
+                "set_ops": False,
+                "data_slicing": False,
+                "conditional_chain": False,
+                "list_dict_comprehensions": False,
+                "lambda": False,
+                "args_kwargs": False,
+            }
+
+        def visit_Call(self, node):
+            # enumerate
+            if isinstance(node.func, ast.Name) and node.func.id == "enumerate":
+                self.found["enumerate"] = True
+            # zip
+            if isinstance(node.func, ast.Name) and node.func.id == "zip":
+                self.found["zip"] = True
+            # any/all
+            if isinstance(node.func, ast.Name) and node.func.id in {"any", "all"}:
+                self.found["any_all"] = True
+            # map/filter
+            if isinstance(node.func, ast.Name) and node.func.id in {"map", "filter"}:
+                self.found["map_filter"] = True
+            self.generic_visit(node)
+
+        def visit_BinOp(self, node):
+            # set operations: union |, intersection &, difference -, symmetric difference ^
+            if isinstance(node.op, (ast.BitOr, ast.BitAnd, ast.Sub, ast.BitXor)):
+                if isinstance(node.left, ast.Set) or isinstance(node.right, ast.Set):
+                    self.found["set_ops"] = True
+            self.generic_visit(node)
+
+        def visit_Subscript(self, node):
+            # data slicing (e.g., a[1:3])
+            if isinstance(node.slice, ast.Slice):
+                self.found["data_slicing"] = True
+            self.generic_visit(node)
+
+        def visit_If(self, node):
+            # conditional chaining: if ... elif ...
+            if any(isinstance(orelse, ast.If) for orelse in node.orelse):
+                self.found["conditional_chain"] = True
+            self.generic_visit(node)
+
+        def visit_ListComp(self, node):
+            self.found["list_dict_comprehensions"] = True
+            self.generic_visit(node)
+
+        def visit_DictComp(self, node):
+            self.found["list_dict_comprehensions"] = True
+            self.generic_visit(node)
+
+        def visit_Lambda(self, node):
+            self.found["lambda"] = True
+            self.generic_visit(node)
+
+        def visit_FunctionDef(self, node):
+            # check *args, **kwargs
+            for arg in node.args.args:
+                if arg.arg == "args" or arg.arg == "kwargs":
+                    self.found["args_kwargs"] = True
+            if node.args.vararg or node.args.kwarg:
+                self.found["args_kwargs"] = True
+            self.generic_visit(node)
+
+    try:
+        tree = ast.parse(code)
+    except SyntaxError:
+        return {"error": "Invalid Python code"}
+    
+    visitor = StructureVisitor()
+    visitor.visit(tree)
+    return visitor.found
 
 def get_length_specifications(avg_length, cur_length):
     if avg_length <= 20:
@@ -37,7 +116,8 @@ def get_length_specifications(avg_length, cur_length):
 
 def validate_against_user_selections(problem_type, specifications, chatgpt_text):
     #create new variable new_text, which holds chatgpt without docstrings
-    meets_length_specs = True
+    length_explanation = ""
+    general_explanation = ""
     meets_selected_structures_specs = True
     meets_disallowed_structures_specs = True
 
@@ -54,9 +134,12 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
     avg_length = int(specifications["required_length"][0]/specifications["required_length"][1])
 
     #check length specs
-    if not get_length_specifications(avg_length, len(new_text))[0]:
-        meets_length_specs = False
+    meets_length_specs, too_long_count = get_length_specifications(avg_length, len(new_text))
+    if not meets_length_specs:
+        lenth_explanation = f"This code is too long by about {too_long_count} and needs to be shortened. If you need to take out functions to meet length requirements, that's okay. The code must still meet the following requirements:"
 
+
+    
     #define class here with ast, check for structures
 
     #send query to anthropic saying that parameters have been violated
@@ -487,7 +570,7 @@ def get_query(user_selections):
 
 
 
-def get_query_old(difficultyLevel, user_selections) -> tuple[str, str]:
+def get_query_old(difficultyLevel) -> tuple[str, str]:
     """Given the difficultyLevel, randomizes the kind of problem received and returns its query.
        Returns a tuple[str,str], where the first string is the problem type and the second is the query."""
     problem_int = random.randint(2,2) #determines which problems will be generated
@@ -511,12 +594,13 @@ def get_query_old(difficultyLevel, user_selections) -> tuple[str, str]:
     return problem_type, query
 
 def process_user_selections_subjects(user_selections):
+    num_structures = 9
     allowed_domains = []
     count = 0
     
     #populates allowed_domains
     for key, value in user_selections['checkbox_states'].items():
-        if count <= 8:
+        if count <= num_structures:
             count += 1
             continue
         if value == True:
@@ -554,6 +638,7 @@ def process_user_selections_subjects(user_selections):
 
 def process_user_selections_structures_and_difficulty(user_selections, specifications):
     #TODO: create a function that validates that what is returned matches these specifications
+    num_structures = 9
 
     allowed_structures = []
     disallowed_structures = []
@@ -561,7 +646,7 @@ def process_user_selections_structures_and_difficulty(user_selections, specifica
     
     #populates allowed_structures and disallowed_structures
     for key, value in user_selections['checkbox_states'].items():
-        if count > 8:
+        if count > num_structures:
             break
         formatted_key = key.replace("-", " ")
         if value == True:
@@ -593,8 +678,8 @@ def process_user_selections_structures_and_difficulty(user_selections, specifica
         do_not = f"Do not use ANY of these structures in the code: {structure_fragment_negative}."
     
     else:
-        do = f"Use ALL of these structures in the code (one or more of each): {structure_fragment_positive}."
-        do_not = f"Please do not use ANY of these structures in the code: {structure_fragment_negative}."
+        do = f"Use ALL of these structures in the code (one or more of each): {structure_fragment_positive}. Use each function piece to its fullest. For example, if using enumerate(), both the counter and the item should be used in the code. \n"
+        do_not = f"Please do not use ANY of these structures in the code: {structure_fragment_negative}. \n"
 
     specifications["selected_structures"] = selected_structures
     specifications["disallowed_structures"] = disallowed_structures
