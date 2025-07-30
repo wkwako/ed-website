@@ -16,7 +16,60 @@ import copy
 from . import static_variables
 
 
-def validate_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
+def get_length_specifications(avg_length, cur_length):
+    if avg_length <= 20:
+        tolerance = 10
+    elif avg_length <= 50:
+        tolerance = 30
+    elif avg_length <= 100:
+        tolerance = 40
+    else:
+        tolerance = int(avg_length*0.40)
+
+    upper_bound = avg_length + tolerance
+
+    if cur_length > upper_bound:
+        diff = cur_length - upper_bound
+        return (False, diff)
+
+    return (True, 0)
+
+
+def validate_against_user_selections(problem_type, specifications, chatgpt_text):
+    #create new variable new_text, which holds chatgpt without docstrings
+    meets_length_specs = True
+    meets_selected_structures_specs = True
+    meets_disallowed_structures_specs = True
+
+    new_text = copy.deepcopy(chatgpt_text)
+    if problem_type == "fill_in_vars":
+        indices = [m.start() for m in re.finditer('\"\"\"', chatgpt_text)]
+        for i in range(len(indices))[::-2]:
+            start = indices[i-1]
+            end = indices[i]
+            new_text = new_text[:start+3] + ' ' + new_text[end:]
+        
+        
+    new_text = new_text.split("\n")
+    avg_length = int(specifications["required_length"][0]/specifications["required_length"][1])
+
+    #check length specs
+    if not get_length_specifications(avg_length, len(new_text))[0]:
+        meets_length_specs = False
+
+    #define class here with ast, check for structures
+
+    #send query to anthropic saying that parameters have been violated
+    #give original prompt, code, and the issues with it, and ask it to generate a new block of code
+
+    #check selected_structures
+
+    #check disallowed_structures
+
+
+    pass
+
+def validate_safety_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
     """Queries ChatGPT, then validates the result. Output is a tuple of the form (bool, str, str, str), which maps to
        (did query succeed, chatgpt_text response if success, error message if failure, code output).
     """
@@ -37,10 +90,6 @@ def validate_and_query(request, query, temperature, problem_type) -> tuple[bool,
         #message was successful, get response data and text
         response_data = chatgpt_response.json()
         chatgpt_text = response_data.get("choices", [{}])[0].get("message", {}).get("content", "No response")
-
-        #if this is a test input, it succeeds
-        # if chatgpt_text[:9] != "```python":
-        #     return True, chatgpt_text, "", ""
         
         #store extra data about the problem in the session
         request.session["problem_text"] = chatgpt_text
@@ -69,7 +118,7 @@ def validate_and_query(request, query, temperature, problem_type) -> tuple[bool,
     #call into validate 3 times. if we fail, 
 
 
-def chatgpt_query(query, temperature, raw_response=False):
+def chatgpt_query(query, temperature, raw_response=False, model="gpt-4.1-mini"):
     """Given a query and a temperature, queries ChatGPT. If raw_response is True,
        returns the unprocessed ChatGPT response. If raw_request is False, returns
        only the text content of the ChatGPT response.
@@ -85,7 +134,7 @@ def chatgpt_query(query, temperature, raw_response=False):
 
     #data
     data = {
-        "model": "gpt-4.1-mini",
+        "model": model,
         "messages": [{"role": "user", "content": query}],
         "temperature": temperature
     }
@@ -100,7 +149,7 @@ def chatgpt_query(query, temperature, raw_response=False):
 
     return chatgpt_response
 
-def anthropic_query(query, temperature=0.5):
+def anthropic_query(query, temperature=0.5, model="claude-3-5-haiku-20241022"):
     #https://docs.anthropic.com/en/docs/about-claude/models/overview
     #https://www.anthropic.com/pricing#api
     role = "You are a computer science teacher."
@@ -109,7 +158,7 @@ def anthropic_query(query, temperature=0.5):
     client.api_key = settings.ANTHROPIC_KEY
 
     message = client.messages.create(
-        model="claude-3-5-haiku-20241022",
+        model=model,
         max_tokens=1000,
         temperature=temperature,
         system=role,
@@ -404,14 +453,16 @@ def query_fill_in_vars(difficultyLevel):
 
     return query
 
-def get_query2(user_selections):
+def get_query(user_selections):
+    specifications = {}
     full_query = ""
     problem_types = ["determine_output", "fill_in_vars", "drag_and_drop",]
     problem_type = problem_types[random.randint(0, len(problem_types)-1)]
 
-    required_structures, disallowed_structures = process_user_selections_structures_and_difficulty(user_selections)
+    problem_type = "fill_in_vars"
+    required_structures, disallowed_structures, specifications = process_user_selections_structures_and_difficulty(user_selections, specifications)
     subject_request = process_user_selections_subjects(user_selections)
-    required_length = process_user_selections_problem_length(user_selections)
+    required_length, specifications = process_user_selections_problem_length(user_selections, specifications)
 
     if problem_type in ["determine_output", "drag_and_drop"]:
         must_do = "-" + "\n-".join(static_variables.instructions["code_mode_output"]["do"]) + "\n"
@@ -429,11 +480,11 @@ def get_query2(user_selections):
     print (f"required structures: {required_structures}")
     print (f"disallowed structures: {disallowed_structures}")
 
-    return problem_type, full_query
+    return problem_type, full_query, specifications
 
 
 
-def get_query(difficultyLevel, user_selections) -> tuple[str, str]:
+def get_query_old(difficultyLevel, user_selections) -> tuple[str, str]:
     """Given the difficultyLevel, randomizes the kind of problem received and returns its query.
        Returns a tuple[str,str], where the first string is the problem type and the second is the query."""
     problem_int = random.randint(2,2) #determines which problems will be generated
@@ -462,17 +513,16 @@ def process_user_selections_subjects(user_selections):
     
     #populates allowed_domains
     for key, value in user_selections['checkbox_states'].items():
-        if count <= 10:
+        if count <= 8:
             count += 1
             continue
         if value == True:
             allowed_domains.append(key)
         count += 1
-
-    print (f"ALLOWED DOMAINS: {allowed_domains}")
     
     #randomly picks a domain
     chosen_domain = allowed_domains[random.randint(0,len(allowed_domains)-1)]
+    chosen_domain_readable = static_variables.subject_mappings[chosen_domain]
 
     #randomly selects a subfield within the domain
     subjects = static_variables.subfield_info[chosen_domain]["subjects"]
@@ -487,9 +537,19 @@ def process_user_selections_subjects(user_selections):
     chosen_q_type = q_types[random.randint(0,len(q_types)-1)]
 
     #turns chosen attributes into sentence
-    return f" Generate a problem from {chosen_domain} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
 
-def process_user_selections_structures_and_difficulty(user_selections):
+    #if length is less than 30, pick either chosen_concept or chosen_q_type.
+    if int(user_selections['problem_length_slider']) < 30:
+        coin_flip = random.randint(0,1)
+        if coin_flip == 0:
+            selection = chosen_concept
+        else:
+            selection = chosen_q_type
+        return f" Generate a problem from {chosen_domain_readable} related to {chosen_subject}."
+
+    return f" Generate a problem from {chosen_domain_readable} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
+
+def process_user_selections_structures_and_difficulty(user_selections, specifications):
     #TODO: create a function that validates that what is returned matches these specifications
 
     allowed_structures = []
@@ -498,7 +558,7 @@ def process_user_selections_structures_and_difficulty(user_selections):
     
     #populates allowed_structures and disallowed_structures
     for key, value in user_selections['checkbox_states'].items():
-        if count > 10:
+        if count > 8:
             break
         formatted_key = key.replace("-", " ")
         if value == True:
@@ -512,10 +572,11 @@ def process_user_selections_structures_and_difficulty(user_selections):
     allowed_structures_permanent = copy.deepcopy(allowed_structures)
 
     #for each difficulty level, select one structure at random
-    while len(allowed_structures) >= difficulty_level:        
+    while difficulty_level > 0 and len(allowed_structures) >= difficulty_level:
         chosen_index = random.randint(0,len(allowed_structures)-1)
         selected_structures.append(allowed_structures[chosen_index])
         del allowed_structures[chosen_index]
+        difficulty_level += -1
     
     disallowed_structures.extend(allowed_structures)
 
@@ -530,10 +591,13 @@ def process_user_selections_structures_and_difficulty(user_selections):
     else:
         do = f"Use ALL of these structures in the code (one or more of each): {structure_fragment_positive}."
         do_not = f"Please do not use ANY of these structures in the code: {structure_fragment_negative}."
-    
-    return do, do_not
 
-def process_user_selections_problem_length(user_selections):
+    specifications["selected_structures"] = selected_structures
+    specifications["disallowed_structures"] = disallowed_structures
+
+    return do, do_not, specifications
+
+def process_user_selections_problem_length(user_selections, specifications):
     problem_length = int(user_selections['problem_length_slider'])
     #might want to adjust these values so the gap is relatively wider on lower lengths,
     #and relatively narrower on higher lengths (10-13 vs 120-130, for example)
@@ -544,7 +608,9 @@ def process_user_selections_problem_length(user_selections):
     starting_length = int(base_start*problem_length*mod1)
     ending_length = int(base_end*problem_length*mod2)
 
-    return f" The length of the problem should be between {starting_length} and {ending_length} lines."
+    specifications["required_length"] = (starting_length, ending_length)
+
+    return f" The length of the problem should be between {starting_length} and {ending_length} lines.", specifications
     
 def select_domain(CS_chance,math_chance,science_chance):
     """Selects the domain of CS, math, and science, provided probabilities.

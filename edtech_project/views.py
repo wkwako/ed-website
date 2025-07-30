@@ -28,15 +28,12 @@ import aiohttp
 #TODO: problem type: fix algorithmic error in standard CS algorithm
 
 #other ideas for problems:
-#1. chatgpt generates code, user must provide a brief description of fns and summary of what code is doing
-#2. chatgpt generates code with random varible names, user must replace var names with better names
 #3. chatgpt generates incorrect code, user must find the error(s) in the code
 
 def home(request):
     """Returns the home page, home.html."""
     return render(request, 'edtech_project/home.html')
 
-#START CODE FROM CHATGPT
 def practice(request):
     """Returns the practice page, practice.html.
        Also contains logic for generating coding problems."""
@@ -51,23 +48,24 @@ def practice(request):
 
             user_selections = body.get('user_selections', None)
 
-            #print (f'USER SELECTIONS: {user_selections}')
 
-            #print (utilities.get_query2(user_selections))
-
-            #END CODE FROM CHATGPT
             #problem_type,query = utilities.get_query(difficultyLevel, user_selections)
-            problem_type, query = utilities.get_query2(user_selections)
+            problem_type, query, specifications = utilities.get_query(user_selections)
+            print (f'FULL QUERY: {query}')
+            print (f'SPECIFICATIONS: {specifications}')
             #set problem text to None
             request.session["problem_text"] = None
 
             #query chatgpt and validate its response
-            result, chatgpt_text, err, output = utilities.validate_and_query(request, query, temperature, problem_type)
+            result, chatgpt_text, err, output = utilities.validate_safety_and_query(request, query, temperature, problem_type)
+
+
+            #utilities.validate_against_user_selections(user_selections)
 
             unmixed_lines = ""
 
-
             if problem_type == "fill_in_vars":
+                print (f"Example correct answer: {chatgpt_text}")
 
                 #filter out halluciations in chatgpt_text (look for/remove extra set of docstrings)
                 lines_to_remove = []

@@ -1,4 +1,21 @@
 
+subject_mappings = {'physics': 'physics',
+                    'chemistry': 'chemistry',
+                    'biology': 'biology',
+                    'earth-science': 'earth science',
+                    'computer-science': 'computer science',
+                    'math': 'math',
+                    'logic-and-reasoning': 'logic and reasoning',
+                    'linguistics': 'linguistics',
+                    'geography': 'geography',
+                    'medicine-anatomy': 'medicine/anatomy',
+                    'adv-physics': 'physics',
+                    'adv-chemistry': 'chemistry',
+                    'adv-biology': 'biology',
+                    'adv-earth-science': 'earth science',
+                    'adv-computer-science': 'computer science',
+                    'adv-math': 'math'}
+
 instructions = {"base_query": "I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational and should help students practice reading code.",
                 "code_mode_output": {"do": ["Use i, j, and k for iterators in \"for\" loops.",
                                             "Store the output of the code in a variable called \"output\", where the last line prints the output variable.",
