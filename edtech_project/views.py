@@ -47,6 +47,8 @@ def practice(request):
             #print (difficultyLevel)
 
             user_selections = body.get('user_selections', None)
+            #TODO: user_selections is populated correctly, but specifications is not when the difficulty > 1. check this first.
+            print (f"USER_SELECTIONS: {user_selections}")
 
 
             #problem_type,query = utilities.get_query(difficultyLevel, user_selections)
@@ -60,7 +62,7 @@ def practice(request):
             result, chatgpt_text, err, output = utilities.validate_safety_and_query(request, query, temperature, problem_type)
 
 
-            #utilities.validate_against_user_selections(user_selections)
+            #utilities.validate_against_user_selections(user_selections, chatgpt_text)
 
             unmixed_lines = ""
 

@@ -69,6 +69,9 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
 
     pass
 
+def detect_structures(code):
+    pass
+
 def validate_safety_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
     """Queries ChatGPT, then validates the result. Output is a tuple of the form (bool, str, str, str), which maps to
        (did query succeed, chatgpt_text response if success, error message if failure, code output).
@@ -572,7 +575,8 @@ def process_user_selections_structures_and_difficulty(user_selections, specifica
     allowed_structures_permanent = copy.deepcopy(allowed_structures)
 
     #for each difficulty level, select one structure at random
-    while difficulty_level > 0 and len(allowed_structures) >= difficulty_level:
+    #TODO: not working when both recursion and generators are selected
+    while difficulty_level > 0 and allowed_structures:
         chosen_index = random.randint(0,len(allowed_structures)-1)
         selected_structures.append(allowed_structures[chosen_index])
         del allowed_structures[chosen_index]
