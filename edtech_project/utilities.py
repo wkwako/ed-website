@@ -15,6 +15,7 @@ import anthropic
 import copy
 from . import static_variables
 
+#START CODE FROM CHATGPT
 def detect_structures(code: str):
     class StructureVisitor(ast.NodeVisitor):
         def __init__(self):
@@ -29,7 +30,9 @@ def detect_structures(code: str):
                 "list_dict_comprehensions": False,
                 "lambda": False,
                 "args_kwargs": False,
+                "double_nested_for": False,
             }
+            self.loop_depth = 0
 
         def visit_Call(self, node):
             # enumerate
@@ -86,6 +89,13 @@ def detect_structures(code: str):
                 self.found["args_kwargs"] = True
             self.generic_visit(node)
 
+        def visit_For(self, node):
+            self.loop_depth += 1
+            if self.loop_depth >= 2:  # means we’re inside a nested for
+                self.found["double_nested_for"] = True
+            self.generic_visit(node)
+            self.loop_depth -= 1
+
     try:
         tree = ast.parse(code)
     except SyntaxError:
@@ -94,6 +104,7 @@ def detect_structures(code: str):
     visitor = StructureVisitor()
     visitor.visit(tree)
     return visitor.found
+#END CODE FROM CHATGPT
 
 def get_length_specifications(avg_length, cur_length):
     if avg_length <= 20:
@@ -113,7 +124,6 @@ def get_length_specifications(avg_length, cur_length):
 
     return (True, 0)
 
-
 def validate_against_user_selections(problem_type, specifications, chatgpt_text):
     #create new variable new_text, which holds chatgpt without docstrings
     length_explanation = ""
@@ -123,24 +133,31 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
 
     new_text = copy.deepcopy(chatgpt_text)
     if problem_type == "fill_in_vars":
-        indices = [m.start() for m in re.finditer('\"\"\"', chatgpt_text)]
+        indices = [m.start() for m in re.finditer('\"\"\"', new_text)]
         for i in range(len(indices))[::-2]:
             start = indices[i-1]
             end = indices[i]
             new_text = new_text[:start+3] + ' ' + new_text[end:]
         
-        
-    new_text = new_text.split("\n")
     avg_length = int(specifications["required_length"][0]/specifications["required_length"][1])
-
+    
+    
     #check length specs
-    meets_length_specs, too_long_count = get_length_specifications(avg_length, len(new_text))
+    meets_length_specs, too_long_count = get_length_specifications(avg_length, len(new_text.split("\n")))
     if not meets_length_specs:
         lenth_explanation = f"This code is too long by about {too_long_count} and needs to be shortened. If you need to take out functions to meet length requirements, that's okay. The code must still meet the following requirements:"
 
-
-    
     #define class here with ast, check for structures
+    structures_found = detect_structures(new_text[8:-3])
+    print (f"STRUCTURES FOUND: {structures_found}")
+    print (f"")
+    #may not be tracking conditional chains
+
+    #if any element in selected_structures is False, flag it
+    #if any element in disallowed_structures is True, flag it
+    for keys, value in structures_found.items():
+
+        pass
 
     #send query to anthropic saying that parameters have been violated
     #give original prompt, code, and the issues with it, and ask it to generate a new block of code
@@ -150,9 +167,6 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
     #check disallowed_structures
 
 
-    pass
-
-def detect_structures(code):
     pass
 
 def validate_safety_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
@@ -546,7 +560,7 @@ def get_query(user_selections):
     problem_type = problem_types[random.randint(0, len(problem_types)-1)]
 
     problem_type = "fill_in_vars"
-    required_structures, disallowed_structures, specifications = process_user_selections_structures_and_difficulty(user_selections, specifications)
+    required_structures, disallowed_structures, specifications = process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications)
     subject_request = process_user_selections_subjects(user_selections)
     required_length, specifications = process_user_selections_problem_length(user_selections, specifications)
 
@@ -557,7 +571,7 @@ def get_query(user_selections):
         must_do = "-" + "\n-".join(static_variables.instructions["code_mode_completion"]["do"]) + "\n"
         must_not_do = "-" + "\n-".join(static_variables.instructions["code_mode_completion"]["do-not"]) + "\n"
 
-    constraints = " All of the requirements on this list must be met: \n" + must_do + required_structures + must_not_do + disallowed_structures
+    constraints = " All of the requirements on this list must be met: \n" + must_do + required_structures + must_not_do + "-" + disallowed_structures
     full_query = static_variables.instructions["base_query"] + constraints + "\n-" + subject_request + "\n-" + required_length
 
     print (f"problem type: {problem_type}")
@@ -632,11 +646,11 @@ def process_user_selections_subjects(user_selections):
             selection = chosen_concept
         else:
             selection = chosen_q_type
-        return f" Generate a problem from {chosen_domain_readable} related to {chosen_subject}."
+        return f" Generate code from the domain of {chosen_domain_readable} related to {chosen_subject}."
 
-    return f" Generate a problem from {chosen_domain_readable} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
+    return f" Generate code from the domain of {chosen_domain_readable} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
 
-def process_user_selections_structures_and_difficulty(user_selections, specifications):
+def process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications):
     #TODO: create a function that validates that what is returned matches these specifications
     num_structures = 9
 
@@ -648,19 +662,26 @@ def process_user_selections_structures_and_difficulty(user_selections, specifica
     for key, value in user_selections['checkbox_states'].items():
         if count > num_structures:
             break
-        formatted_key = key.replace("-", " ")
+        #formatted_key = key.replace("-", " ")
         if value == True:
-            allowed_structures.append(formatted_key)
+            allowed_structures.append(key)
         else:
-            disallowed_structures.append(formatted_key)
+            disallowed_structures.append(key)
         count += 1
 
     selected_structures = []
     difficulty_level = int(user_selections['difficulty_level_slider'])
     allowed_structures_permanent = copy.deepcopy(allowed_structures)
 
-    #for each difficulty level, select one structure at random
-    #TODO: not working when both recursion and generators are selected
+    print ("ATTEMPTING TO APPEND FOR LOOPS TO DISALLOWED STRUCTURES")
+    print (difficulty_level, type(difficulty_level))
+    print (disallowed_structures, type(disallowed_structures))
+    print (problem_type, type(problem_type))
+
+    #if difficulty < 1 or problem type is determine_output, disallow nested for loops
+    if difficulty_level < 2 or problem_type == "determine_output":
+        disallowed_structures.append("nested 'for' loops")
+
     while difficulty_level > 0 and allowed_structures:
         chosen_index = random.randint(0,len(allowed_structures)-1)
         selected_structures.append(allowed_structures[chosen_index])
@@ -669,9 +690,8 @@ def process_user_selections_structures_and_difficulty(user_selections, specifica
     
     disallowed_structures.extend(allowed_structures)
 
-    #join allowed structures and disallowed structures
-    structure_fragment_positive = ", ".join(selected_structures)
-    structure_fragment_negative = ", ".join(disallowed_structures)
+    structure_fragment_positive = ", ".join([static_variables.structure_mappings[i] for i in selected_structures])
+    structure_fragment_negative = ", ".join([static_variables.structure_mappings[i] for i in disallowed_structures])
 
     if not allowed_structures_permanent:
         do = ""
@@ -701,416 +721,416 @@ def process_user_selections_problem_length(user_selections, specifications):
 
     return f" The length of the problem should be between {starting_length} and {ending_length} lines.", specifications
     
-def select_domain(CS_chance,math_chance,science_chance):
-    """Selects the domain of CS, math, and science, provided probabilities.
-       science_chance is purposefully not used and is for visibility only."""
+# def select_domain(CS_chance,math_chance,science_chance):
+#     """Selects the domain of CS, math, and science, provided probabilities.
+#        science_chance is purposefully not used and is for visibility only."""
     
-    CS_norm = 100-CS_chance
-    choice = random.randint(1,100)
-    if choice > CS_norm:
-        return "computer science"
+#     CS_norm = 100-CS_chance
+#     choice = random.randint(1,100)
+#     if choice > CS_norm:
+#         return "computer science"
     
-    math_norm = CS_norm - math_chance
-    if choice > math_norm:
-        return "math"
+#     math_norm = CS_norm - math_chance
+#     if choice > math_norm:
+#         return "math"
     
-    science_domains = "physics,chemistry,biology,geoscience".split(",")
-    return science_domains[random.randint(0,len(science_domains)-1)]
+#     science_domains = "physics,chemistry,biology,geoscience".split(",")
+#     return science_domains[random.randint(0,len(science_domains)-1)]
 
-def select_subject(problem_type, CS_chance=75, math_chance=15, science_chance=10):
-    """Randomly selects a domain, question type, subject, and concept, then inserts it into the query.
-       Using this method, we can produce a large number of problems with a low chance for repeats."""
-    domain = select_domain(CS_chance, math_chance, science_chance)
-    #data_structures = "1D arrays,2D arrays,dictionaries,simple class,loops conditions and arithmetic,sets,counters and flags,tuples,simulated graphs".split(",")
+# def select_subject(problem_type, CS_chance=75, math_chance=15, science_chance=10):
+#     """Randomly selects a domain, question type, subject, and concept, then inserts it into the query.
+#        Using this method, we can produce a large number of problems with a low chance for repeats."""
+#     domain = select_domain(CS_chance, math_chance, science_chance)
+#     #data_structures = "1D arrays,2D arrays,dictionaries,simple class,loops conditions and arithmetic,sets,counters and flags,tuples,simulated graphs".split(",")
     
-    #START LIST FROM CHATGPT"
-    q_types = """simulating N (2-4) steps
-                 checking conditions
-                 extracting a minimum
-                 extracting a maximum
-                 counting the number of changes
-                 computing a final result
-                 tracking a state change with a variables
-                 counting how often something happens
-                 finding the first time a condition is true
-                 simulating back-and-forth motion
-                 computing how long until a threshold is reached
-                 using boolean logic to evaluate a rule set
-                 reversing a process and checking results
-                 categorizing outcomes into bins
-                 modeling a chain reaction
-                 tracking maximum distance from origin
-                 tracking whether or not a rule has been broken
-                 detecting steady-state/stabilization
-                 finding peaks or valleys
-                 tagging items based on rank or threshold""".split("\n")
-    #END LIST FROM CHATGPT"
+#     #START LIST FROM CHATGPT"
+#     q_types = """simulating N (2-4) steps
+#                  checking conditions
+#                  extracting a minimum
+#                  extracting a maximum
+#                  counting the number of changes
+#                  computing a final result
+#                  tracking a state change with a variables
+#                  counting how often something happens
+#                  finding the first time a condition is true
+#                  simulating back-and-forth motion
+#                  computing how long until a threshold is reached
+#                  using boolean logic to evaluate a rule set
+#                  reversing a process and checking results
+#                  categorizing outcomes into bins
+#                  modeling a chain reaction
+#                  tracking maximum distance from origin
+#                  tracking whether or not a rule has been broken
+#                  detecting steady-state/stabilization
+#                  finding peaks or valleys
+#                  tagging items based on rank or threshold""".split("\n")
+#     #END LIST FROM CHATGPT"
 
-    if problem_type == "fill_in_vars":
-        #START LIST FROM CHATGPT
-        subjects = """strings
-                      lists
-                      dictionaries
-                      numbers
-                      basic algorithms
-                      loops and conditions
-                      math operations""".split("\n")
+#     if problem_type == "fill_in_vars":
+#         #START LIST FROM CHATGPT
+#         subjects = """strings
+#                       lists
+#                       dictionaries
+#                       numbers
+#                       basic algorithms
+#                       loops and conditions
+#                       math operations""".split("\n")
         
-        concepts = """reversing values
-                      counting specific elements
-                      checking conditions
-                      removing duplicates
-                      flattening nested structures
-                      finding max or min values
-                      searching for a target
-                      grouping items
-                      formatting strings
-                      accumulating sums or products
-                      comparing values
-                      converting between types
-                      validating input formats
-                      extracting patterns of substrings
-                      sorting data
-                      working with indices or positions
-                      GCD or LCD
-                      """.split("\n")
+#         concepts = """reversing values
+#                       counting specific elements
+#                       checking conditions
+#                       removing duplicates
+#                       flattening nested structures
+#                       finding max or min values
+#                       searching for a target
+#                       grouping items
+#                       formatting strings
+#                       accumulating sums or products
+#                       comparing values
+#                       converting between types
+#                       validating input formats
+#                       extracting patterns of substrings
+#                       sorting data
+#                       working with indices or positions
+#                       GCD or LCD
+#                       """.split("\n")
         
-        q_types += """checking conditions on each element
-                      filtering a collection based on rules
-                      transforming each element in a collection
-                      accumulating a result cross a loop
-                      validating properties of an input
-                      reordering or sorting values
-                      reformatting a string or number
-                      traversing nested structures
-                      searching for a target match
-                      extracting or slicing part of a value
-                      converting between representations
-                      removing or replacing parts of data
-                      tracking a running total or count
-                      checking for uniqueness or duplicates
-                      counting specific patterns or types
-                      computing a simple numeric property
-                      """.split("\n")
-        #END LIST FROM CHATGPT
+#         q_types += """checking conditions on each element
+#                       filtering a collection based on rules
+#                       transforming each element in a collection
+#                       accumulating a result cross a loop
+#                       validating properties of an input
+#                       reordering or sorting values
+#                       reformatting a string or number
+#                       traversing nested structures
+#                       searching for a target match
+#                       extracting or slicing part of a value
+#                       converting between representations
+#                       removing or replacing parts of data
+#                       tracking a running total or count
+#                       checking for uniqueness or duplicates
+#                       counting specific patterns or types
+#                       computing a simple numeric property
+#                       """.split("\n")
+#         #END LIST FROM CHATGPT
         
-    else:
-        if domain == "physics":
-            #START LIST FROM CHATGPT"
-            subjects="""mechanics
-                        electromagnetism
-                        lenses
-                        waves
-                        kinematics
-                        cosmology
-                        fluid dynamics
-                        special relativity
-                        general relativity
-                        basic doppler effect shifts
-                        heat diffusion in 1D
-                        bouncing ball height after 1-3 bounces
-                        time delay due to signal travel
-                        refraction through 1-3 different materials
-                        basic lens magnification effects
-                        basic projectile motion (no trig)
-                        change in kinetic energy
-                        pendulum swings without damping
-                        water level change from faucet
-                        change in mass
-                        gravity effects""".split("\n")
+#     else:
+#         if domain == "physics":
+#             #START LIST FROM CHATGPT"
+#             subjects="""mechanics
+#                         electromagnetism
+#                         lenses
+#                         waves
+#                         kinematics
+#                         cosmology
+#                         fluid dynamics
+#                         special relativity
+#                         general relativity
+#                         basic doppler effect shifts
+#                         heat diffusion in 1D
+#                         bouncing ball height after 1-3 bounces
+#                         time delay due to signal travel
+#                         refraction through 1-3 different materials
+#                         basic lens magnification effects
+#                         basic projectile motion (no trig)
+#                         change in kinetic energy
+#                         pendulum swings without damping
+#                         water level change from faucet
+#                         change in mass
+#                         gravity effects""".split("\n")
 
-            concepts = """position updates over time
-                        simple force-based movement
-                        energy transfer
-                        light reflection
-                        temperature changes
-                        charge buildup
-                        friction forces
-                        elastic object collisions
-                        inelastic object collisions
-                        object collisions
-                        velocity estimation
-                        time estimation
-                        gravitational attraction
-                        net force from multiple sources
-                        orbit approximations without calculus
-                        decay simulation""".split('\n')
-            #END LIST FROM CHATGPT"
+#             concepts = """position updates over time
+#                         simple force-based movement
+#                         energy transfer
+#                         light reflection
+#                         temperature changes
+#                         charge buildup
+#                         friction forces
+#                         elastic object collisions
+#                         inelastic object collisions
+#                         object collisions
+#                         velocity estimation
+#                         time estimation
+#                         gravitational attraction
+#                         net force from multiple sources
+#                         orbit approximations without calculus
+#                         decay simulation""".split('\n')
+#             #END LIST FROM CHATGPT"
 
-        if domain == "chemistry":
-            #START LIST FROM CHATGPT"
-            subjects = """stoichiometry
-                        chemical reactions
-                        periodic trends
-                        atomic structure
-                        bonding
-                        acids
-                        bases
-                        oxidation and reduction
-                        chemical kinetics
-                        thermochemistry
-                        gas laws
-                        solution chemistry
-                        nuclear chemistry
-                        molecular geometry
-                        reaction equilibrium
-                        phase changes""".split("\n")
+#         if domain == "chemistry":
+#             #START LIST FROM CHATGPT"
+#             subjects = """stoichiometry
+#                         chemical reactions
+#                         periodic trends
+#                         atomic structure
+#                         bonding
+#                         acids
+#                         bases
+#                         oxidation and reduction
+#                         chemical kinetics
+#                         thermochemistry
+#                         gas laws
+#                         solution chemistry
+#                         nuclear chemistry
+#                         molecular geometry
+#                         reaction equilibrium
+#                         phase changes""".split("\n")
             
-            concepts = """balancing elements across reactions and products
-                        simulating concentration changes over time
-                        converting grams to moles or vice versa
-                        identifying limiting reagents
-                        calculating percent yield
-                        simulating ph changes in titrations
-                        tracking energy released
-                        tracking energy absorbed
-                        determining reaction rate based on time steps
-                        simulating half-life decay
-                        modeling temperature and pressure effects on volume
-                        assigning electron configurations
-                        sorting elements by some attribute (atomic radius, etc.)
-                        predicting solubility using polarity
-                        modeling phase transitions
-                        simulating catalyse effects based on yield
-                        estimating number of ions dissolved in solution""".split("\n")
-            #END LIST FROM CHATGPT"
+#             concepts = """balancing elements across reactions and products
+#                         simulating concentration changes over time
+#                         converting grams to moles or vice versa
+#                         identifying limiting reagents
+#                         calculating percent yield
+#                         simulating ph changes in titrations
+#                         tracking energy released
+#                         tracking energy absorbed
+#                         determining reaction rate based on time steps
+#                         simulating half-life decay
+#                         modeling temperature and pressure effects on volume
+#                         assigning electron configurations
+#                         sorting elements by some attribute (atomic radius, etc.)
+#                         predicting solubility using polarity
+#                         modeling phase transitions
+#                         simulating catalyse effects based on yield
+#                         estimating number of ions dissolved in solution""".split("\n")
+#             #END LIST FROM CHATGPT"
 
-        if domain == "biology":
-            #START LIST FROM CHATGPT"
-            subjects = """cell biology
-                        genetics
-                        ecology
-                        human anatomy
-                        physiology
-                        microbiology
-                        zoology
-                        botany
-                        neuroscience
-                        evolutionary biology
-                        immunology
-                        bioinformatics""".split("\n")
+#         if domain == "biology":
+#             #START LIST FROM CHATGPT"
+#             subjects = """cell biology
+#                         genetics
+#                         ecology
+#                         human anatomy
+#                         physiology
+#                         microbiology
+#                         zoology
+#                         botany
+#                         neuroscience
+#                         evolutionary biology
+#                         immunology
+#                         bioinformatics""".split("\n")
             
-            concepts = """tracking population growth over time
-                        simulating predator-prey interactions
-                        gene expression based on input traits
-                        counting mutations in DNA sequences
-                        analyze trait inheritance
-                        simulating diffusion across a membrane
-                        tracking disease spread throughout a population
-                        modeling neuron firing thresholds
-                        following enzymic reactions
-                        simulating resource competition
-                        tracking food web changes
-                        modeling changes in biodiversity over time
-                        updating fitness levels based on environment
-                        simulating photosynthesis under different conditions
-                        analyze heart rate
-                        modeling immune response to infection""".split("\n")
-            #END LIST FROM CHATGPT"
+#             concepts = """tracking population growth over time
+#                         simulating predator-prey interactions
+#                         gene expression based on input traits
+#                         counting mutations in DNA sequences
+#                         analyze trait inheritance
+#                         simulating diffusion across a membrane
+#                         tracking disease spread throughout a population
+#                         modeling neuron firing thresholds
+#                         following enzymic reactions
+#                         simulating resource competition
+#                         tracking food web changes
+#                         modeling changes in biodiversity over time
+#                         updating fitness levels based on environment
+#                         simulating photosynthesis under different conditions
+#                         analyze heart rate
+#                         modeling immune response to infection""".split("\n")
+#             #END LIST FROM CHATGPT"
 
-        if domain == "geoscience":
-            #START LIST FROM CHATGPT"
-            subjects = """plate tectonics
-                        seismology
-                        volcanology
-                        ocean currents
-                        weather patterns
-                        climate change
-                        layers of the earth
-                        rock cycles
-                        soil formation
-                        erosion and deposition
-                        earth's magnetic field
-                        greenhouse gases
-                        atmospheric pressure
-                        cloud formation
-                        water cycle
-                        solar radiation
-                        the seasons""".split("\n")
+#         if domain == "geoscience":
+#             #START LIST FROM CHATGPT"
+#             subjects = """plate tectonics
+#                         seismology
+#                         volcanology
+#                         ocean currents
+#                         weather patterns
+#                         climate change
+#                         layers of the earth
+#                         rock cycles
+#                         soil formation
+#                         erosion and deposition
+#                         earth's magnetic field
+#                         greenhouse gases
+#                         atmospheric pressure
+#                         cloud formation
+#                         water cycle
+#                         solar radiation
+#                         the seasons""".split("\n")
             
-            concepts = """tracking a gradual change in a physical property
-                        simulating an environmental process over several steps
-                        updating a value based on its interactions with its neighbors
-                        computing how a variable changes over time or space
-                        checking if conditions match a known pattern
-                        identifying significant points in a range
-                        flagging outliers or abnormal readings""".split("\n")
-            #END LIST FROM CHATGPT"
+#             concepts = """tracking a gradual change in a physical property
+#                         simulating an environmental process over several steps
+#                         updating a value based on its interactions with its neighbors
+#                         computing how a variable changes over time or space
+#                         checking if conditions match a known pattern
+#                         identifying significant points in a range
+#                         flagging outliers or abnormal readings""".split("\n")
+#             #END LIST FROM CHATGPT"
 
-        if domain == "computer science":
-            #START LIST FROM CHATGPT"
-            subjects = """data structures
-                        sorting data
-                        searching through data
-                        string manipulation
-                        recursion
-                        basic algorithms
-                        memory simulation
-                        bitwise operations
-                        encoding
-                        decoding
-                        simulation of logic gates
-                        graph traversal (non-heavy, simple DFS/BFS)
-                        binary trees
-                        heaps
-                        hashing
-                        collisions
-                        finite state machines
-                        basic compilers
-                        basic interpreters
-                        virtual machines (simplified)
-                        CPU scheduling
-                        stack simulation
-                        queue simulation
-                        instruction sets
-                        memory layout
-                        REST API design basics
-                        request handling and routing
-                        JSON data parsing
-                        user authentication logic
-                        session/token simulation
-                        form submission processing
-                        CRUD operations (create, read, update, delete)
-                        input validation and sanitization
-                        pagination and search filtering
-                        error logging and handling
-                        configuration loading (e.g. from JSON and ENV dicts)
-                        rate limiting simulation
-                        basic job queue simulation
-                        email/message formatting
-                        file upload simulation
-                        time-based job simulation (e.g. cron-like behavior)
-                        simple database query emulation (no SQL)
-                        microservice communication (mocked with dicts/function)
-                        simulated cloud storage or blob access
-                        basic analytics pipeline (e.g. log -> stats)
-                        API design
-                        frontend-backend communication
-                        database querying
-                        data serialization
-                        DevOps and deployment
-                        networking
-                        rate limiting
-                        code linting and formatting
-                        cloud storage interactions
-                        package management""".split("\n")
+#         if domain == "computer science":
+#             #START LIST FROM CHATGPT"
+#             subjects = """data structures
+#                         sorting data
+#                         searching through data
+#                         string manipulation
+#                         recursion
+#                         basic algorithms
+#                         memory simulation
+#                         bitwise operations
+#                         encoding
+#                         decoding
+#                         simulation of logic gates
+#                         graph traversal (non-heavy, simple DFS/BFS)
+#                         binary trees
+#                         heaps
+#                         hashing
+#                         collisions
+#                         finite state machines
+#                         basic compilers
+#                         basic interpreters
+#                         virtual machines (simplified)
+#                         CPU scheduling
+#                         stack simulation
+#                         queue simulation
+#                         instruction sets
+#                         memory layout
+#                         REST API design basics
+#                         request handling and routing
+#                         JSON data parsing
+#                         user authentication logic
+#                         session/token simulation
+#                         form submission processing
+#                         CRUD operations (create, read, update, delete)
+#                         input validation and sanitization
+#                         pagination and search filtering
+#                         error logging and handling
+#                         configuration loading (e.g. from JSON and ENV dicts)
+#                         rate limiting simulation
+#                         basic job queue simulation
+#                         email/message formatting
+#                         file upload simulation
+#                         time-based job simulation (e.g. cron-like behavior)
+#                         simple database query emulation (no SQL)
+#                         microservice communication (mocked with dicts/function)
+#                         simulated cloud storage or blob access
+#                         basic analytics pipeline (e.g. log -> stats)
+#                         API design
+#                         frontend-backend communication
+#                         database querying
+#                         data serialization
+#                         DevOps and deployment
+#                         networking
+#                         rate limiting
+#                         code linting and formatting
+#                         cloud storage interactions
+#                         package management""".split("\n")
             
-            concepts = """simulating execution over multiple steps
-                        updating states
-                        tracking resource usage over time
-                        checking consistency of a system
-                        validating a system
-                        counting the number of operations of a system
-                        comparing two outputs for correctness
-                        evaluating logic conditions
-                        classifying inputs
-                        checking if a pattern exists in another
-                        finding the most used memory/register/element
-                        summarizing the final state of a system
-                        tracking growth of a structure
-                        measuring depth, size, or height of a system
-                        flagging special or end cases
-                        computing differences between two configurations
-                        identifying when a system reaches a halting condition
-                        determining whether a structure satisfies constraints
-                        extracing fields from JSON/dictionaries
-                        transforming or formatting structured data
-                        merging or splitting structured inputs
-                        handling missing or malformed data
-                        simulating login/logout flow
-                        checking if session/token is vlid
-                        validating user inputs against criteria (without using input())
-                        counting user interactions
-                        returning appropriate HTTP-like codes based on input
-                        simulating an API request and response cycle
-                        checking if input follows schema (without using input())
-                        verifying if request contains required fields
-                        simulating API unit test behavior
-                        resolving data conflicts""".split("\n")
+#             concepts = """simulating execution over multiple steps
+#                         updating states
+#                         tracking resource usage over time
+#                         checking consistency of a system
+#                         validating a system
+#                         counting the number of operations of a system
+#                         comparing two outputs for correctness
+#                         evaluating logic conditions
+#                         classifying inputs
+#                         checking if a pattern exists in another
+#                         finding the most used memory/register/element
+#                         summarizing the final state of a system
+#                         tracking growth of a structure
+#                         measuring depth, size, or height of a system
+#                         flagging special or end cases
+#                         computing differences between two configurations
+#                         identifying when a system reaches a halting condition
+#                         determining whether a structure satisfies constraints
+#                         extracing fields from JSON/dictionaries
+#                         transforming or formatting structured data
+#                         merging or splitting structured inputs
+#                         handling missing or malformed data
+#                         simulating login/logout flow
+#                         checking if session/token is vlid
+#                         validating user inputs against criteria (without using input())
+#                         counting user interactions
+#                         returning appropriate HTTP-like codes based on input
+#                         simulating an API request and response cycle
+#                         checking if input follows schema (without using input())
+#                         verifying if request contains required fields
+#                         simulating API unit test behavior
+#                         resolving data conflicts""".split("\n")
             
-            q_types += """formatting structured data
-                        identifying missing fields
-                        simulating an API response
-                        filtering logs or entries
-                        retrying failed operations
-                        handling state transitions
-                        processing a batch of inputs (without input())
-                        simulating a cache hit/miss
-                        validating constraints
-                        checking configuration values
-                        parsing a data structure
-                        generating example output
-                        detecting common user errors""".split("\n")
-            #END LIST FROM CHATGPT"
+#             q_types += """formatting structured data
+#                         identifying missing fields
+#                         simulating an API response
+#                         filtering logs or entries
+#                         retrying failed operations
+#                         handling state transitions
+#                         processing a batch of inputs (without input())
+#                         simulating a cache hit/miss
+#                         validating constraints
+#                         checking configuration values
+#                         parsing a data structure
+#                         generating example output
+#                         detecting common user errors""".split("\n")
+#             #END LIST FROM CHATGPT"
 
-        if domain == "math":
-            #START LIST FROM CHATGPT"
-            subjects = """divisibility
-                        prime numbers
-                        modular arithmetic
-                        factors and multiples
-                        number classification
-                        integer sequences
-                        digital operations
-                        continued fractions
-                        patterns in number lists
-                        integer partitions
-                        modular inverse
-                        factorization
-                        congruence
-                        totatives (simple)
-                        happy numbers, squre, cube, magic, triangular, or armstrong numbers (select one)
-                        repeated digit patterns
-                        arithmetic sequences
-                        geometric sequences
-                        """.split("\n")
+#         if domain == "math":
+#             #START LIST FROM CHATGPT"
+#             subjects = """divisibility
+#                         prime numbers
+#                         modular arithmetic
+#                         factors and multiples
+#                         number classification
+#                         integer sequences
+#                         digital operations
+#                         continued fractions
+#                         patterns in number lists
+#                         integer partitions
+#                         modular inverse
+#                         factorization
+#                         congruence
+#                         totatives (simple)
+#                         happy numbers, squre, cube, magic, triangular, or armstrong numbers (select one)
+#                         repeated digit patterns
+#                         arithmetic sequences
+#                         geometric sequences
+#                         """.split("\n")
             
-            concepts = """checking if a number is divisible by another
-                        counting how many numbers in a list meet a condition
-                        checking if a number is prime
-                        listing the divisors of a number
-                        computing the GCD
-                        computing the LCM
-                        testing for co-prime status
-                        summing the digits of a number
-                        finding the digital root
-                        generating the first N prime numbers
-                        generating the first N Fibonacci numbers
-                        checking if a number is a Fibonacci number
-                        reversing the digits of a number
-                        checking if a number is a palindrome
-                        computing a modular inverse
-                        summing even numbers in a range
-                        summing odd numbers in a range
-                        checking palindromicity
-                        classifying a number as perfect, deficient, or abundant
-                        checking if a number is a product of exact N primes
-                        finding the smallest divisor
-                        finding the largest divisor
-                        finding the nth term of a simple recurrence""".split("\n")
+#             concepts = """checking if a number is divisible by another
+#                         counting how many numbers in a list meet a condition
+#                         checking if a number is prime
+#                         listing the divisors of a number
+#                         computing the GCD
+#                         computing the LCM
+#                         testing for co-prime status
+#                         summing the digits of a number
+#                         finding the digital root
+#                         generating the first N prime numbers
+#                         generating the first N Fibonacci numbers
+#                         checking if a number is a Fibonacci number
+#                         reversing the digits of a number
+#                         checking if a number is a palindrome
+#                         computing a modular inverse
+#                         summing even numbers in a range
+#                         summing odd numbers in a range
+#                         checking palindromicity
+#                         classifying a number as perfect, deficient, or abundant
+#                         checking if a number is a product of exact N primes
+#                         finding the smallest divisor
+#                         finding the largest divisor
+#                         finding the nth term of a simple recurrence""".split("\n")
             
-            q_types += """checking numerical conditions
-                        counting values with a property
-                        tracking running totals or sequences
-                        computing a transformation
-                        detecting a classification
-                        generating structured input
-                        looping through a mathematical range
-                        pattern detection or repetition
-                        building up from a recurrence
-                        checking equivalence across representations
-                        grouping or filtering by criteria""".split("\n")
-            #END LIST FROM CHATGPT"
+#             q_types += """checking numerical conditions
+#                         counting values with a property
+#                         tracking running totals or sequences
+#                         computing a transformation
+#                         detecting a classification
+#                         generating structured input
+#                         looping through a mathematical range
+#                         pattern detection or repetition
+#                         building up from a recurrence
+#                         checking equivalence across representations
+#                         grouping or filtering by criteria""".split("\n")
+#             #END LIST FROM CHATGPT"
 
-    chosen_subject = subjects[random.randint(0,len(subjects)-1)].strip()
-    chosen_concept=concepts[random.randint(0,len(concepts)-1)].strip()
-    chosen_q_type = q_types[random.randint(0,len(q_types)-1)].strip()
+#     chosen_subject = subjects[random.randint(0,len(subjects)-1)].strip()
+#     chosen_concept=concepts[random.randint(0,len(concepts)-1)].strip()
+#     chosen_q_type = q_types[random.randint(0,len(q_types)-1)].strip()
 
-    #combines randomly chosen domains, subjects, concepts, and question types into a string for insertion
-    #into query.
-    #START CODE FROM CHATGPT
-    query = f" Use an example from {domain} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
-    #END CODE FROM CHATGPT
+#     #combines randomly chosen domains, subjects, concepts, and question types into a string for insertion
+#     #into query.
+#     #START CODE FROM CHATGPT
+#     query = f" Use an example from {domain} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
+#     #END CODE FROM CHATGPT
 
-    return query
+#     return query
     

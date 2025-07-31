@@ -62,7 +62,7 @@ def practice(request):
             result, chatgpt_text, err, output = utilities.validate_safety_and_query(request, query, temperature, problem_type)
 
 
-            #utilities.validate_against_user_selections(user_selections, chatgpt_text)
+            utilities.validate_against_user_selections(problem_type, specifications, chatgpt_text)
 
             unmixed_lines = ""
 

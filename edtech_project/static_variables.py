@@ -16,6 +16,19 @@ subject_mappings = {'physics': 'physics',
                     'adv-computer-science': 'computer science',
                     'adv-math': 'math'}
 
+structure_mappings = {"enumerate": "enumerate()",
+                      "zip": "zip()",
+                      "any/all": "any()/all()",
+                      "map/filter": "map()/filter()",
+                      "set-operations": "set operations",
+                      "data-slicing": "data slicing",
+                      "conditional-chaining": "conditional chaining",
+                      "comprehensions": "comprehensions",
+                      "lambda-functions": "lambda functions",
+                      "args-and-kwargs": "args and kwargs",
+                      "nested 'for' loops": "nested 'for' loops",
+                     }
+
 instructions = {"base_query": "I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational and should help students practice reading code.",
                 "code_mode_output": {"do": ["Use i, j, and k for iterators in \"for\" loops.",
                                             "Store the output of the code in a variable called \"output\", where the last line prints the output variable.",
