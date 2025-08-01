@@ -26,14 +26,15 @@ structure_mappings = {"enumerate": "enumerate()",
                       "comprehensions": "comprehensions",
                       "lambda-functions": "lambda functions",
                       "args-and-kwargs": "args and kwargs",
-                      "nested 'for' loops": "nested 'for' loops",
+                      "nested for loops": "nested for loops",
                      }
 
 instructions = {"base_query": "I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational and should help students practice reading code.",
                 "code_mode_output": {"do": ["Use i, j, and k for iterators in \"for\" loops.",
                                             "Store the output of the code in a variable called \"output\", where the last line prints the output variable.",
                                             "The number of iterations through the most nested for loop should never be more than 5 (if using for loops).",
-                                            "The output should be limited to 15 characters or fewer, and not more than one line long. The output must be something the user can type into a text box (not contain weird characters or symbols).",
+                                            "The output should be limited to 10 characters or fewer, and not more than one line long. The output must be something the user can type into a text box (not contain weird characters or symbols).",
+                                            "The output of the code must be easy to determine with mental math."
                                             ],
                                      "do-not": ["Do not include descriptions of the code.",
                                                 "Do not use input() or random() functions in the code.",

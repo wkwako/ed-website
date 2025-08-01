@@ -22,15 +22,15 @@ def detect_structures(code: str):
             self.found = {
                 "enumerate": False,
                 "zip": False,
-                "any_all": False,
-                "map_filter": False,
-                "set_ops": False,
-                "data_slicing": False,
-                "conditional_chain": False,
-                "list_dict_comprehensions": False,
-                "lambda": False,
-                "args_kwargs": False,
-                "double_nested_for": False,
+                "any/all": False,
+                "map/filter": False,
+                "set-operations": False,
+                "data-slicing": False,
+                "conditional-chaining": False,
+                "comprehensions": False,
+                "lambda-functions": False,
+                "args-and-kwargs": False,
+                "nested for loops": False,
             }
             self.loop_depth = 0
 
@@ -43,56 +43,56 @@ def detect_structures(code: str):
                 self.found["zip"] = True
             # any/all
             if isinstance(node.func, ast.Name) and node.func.id in {"any", "all"}:
-                self.found["any_all"] = True
+                self.found["any-all"] = True
             # map/filter
             if isinstance(node.func, ast.Name) and node.func.id in {"map", "filter"}:
-                self.found["map_filter"] = True
+                self.found["map-filter"] = True
             self.generic_visit(node)
 
         def visit_BinOp(self, node):
             # set operations: union |, intersection &, difference -, symmetric difference ^
             if isinstance(node.op, (ast.BitOr, ast.BitAnd, ast.Sub, ast.BitXor)):
                 if isinstance(node.left, ast.Set) or isinstance(node.right, ast.Set):
-                    self.found["set_ops"] = True
+                    self.found["set-operations"] = True
             self.generic_visit(node)
 
         def visit_Subscript(self, node):
             # data slicing (e.g., a[1:3])
             if isinstance(node.slice, ast.Slice):
-                self.found["data_slicing"] = True
+                self.found["data-slicing"] = True
             self.generic_visit(node)
 
         def visit_If(self, node):
             # conditional chaining: if ... elif ...
             if any(isinstance(orelse, ast.If) for orelse in node.orelse):
-                self.found["conditional_chain"] = True
+                self.found["conditional-chaining"] = True
             self.generic_visit(node)
 
         def visit_ListComp(self, node):
-            self.found["list_dict_comprehensions"] = True
+            self.found["comprehensions"] = True
             self.generic_visit(node)
 
         def visit_DictComp(self, node):
-            self.found["list_dict_comprehensions"] = True
+            self.found["comprehensions"] = True
             self.generic_visit(node)
 
         def visit_Lambda(self, node):
-            self.found["lambda"] = True
+            self.found["lambda-functions"] = True
             self.generic_visit(node)
 
         def visit_FunctionDef(self, node):
             # check *args, **kwargs
             for arg in node.args.args:
                 if arg.arg == "args" or arg.arg == "kwargs":
-                    self.found["args_kwargs"] = True
+                    self.found["args-and-kwargs"] = True
             if node.args.vararg or node.args.kwarg:
-                self.found["args_kwargs"] = True
+                self.found["args-and-kwargs"] = True
             self.generic_visit(node)
 
         def visit_For(self, node):
             self.loop_depth += 1
             if self.loop_depth >= 2:  # means we’re inside a nested for
-                self.found["double_nested_for"] = True
+                self.found["nested for loops"] = True
             self.generic_visit(node)
             self.loop_depth -= 1
 
@@ -142,15 +142,17 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
         length_explanation = f"This code is too long by about {too_long_count} and needs to be shortened."
 
     #define class here with ast, check for structures
-    code_string_only = detect_structures(new_text[8:-3])
+    detected_structures = detect_structures(new_text[8:-3])
 
+    print (f"Detected structures: {detected_structures}")
     #may not be tracking conditional chains?
 
     #if any element in selected_structures is False, flag it
     #if any element in disallowed_structures is True, flag it
+    print (f"KEY SPECIFICATION DEBUGGING: {specifications['disallowed_structures']}")
     should_include = []
     should_not_include = []
-    for key, value in code_string_only.items():
+    for key, value in detected_structures.items():
         if value is False and key in specifications['selected_structures']:
             should_include.append(key)
         elif value is True and key in specifications['disallowed_structures']:
@@ -176,6 +178,10 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
             general_instructions += " The length of the code (not including docstrings) should be as close as possible to the original."
 
         #send query to anthropic saying that parameters have been violated
+
+        if problem_type == "determine_output":
+            general_instructions += " Additionally, please ask yourself: could a user figure out what the code outputs by reading through the code in their head? If they cannot, change the problem and docstrings such that the user can do this in their head."
+
         new_code = anthropic_query(general_instructions)
         print ("Code did not meet specifications for the following reasons: ")
         print (f"Code should have included structures but did not: {should_include}")
@@ -576,7 +582,7 @@ def get_query(user_selections):
     problem_types = ["determine_output", "fill_in_vars", "drag_and_drop",]
     problem_type = problem_types[random.randint(0, len(problem_types)-1)]
 
-    problem_type = "fill_in_vars"
+    problem_type = "determine_output"
     required_structures, disallowed_structures, specifications = process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications)
     subject_request = process_user_selections_subjects(user_selections)
     required_length, specifications = process_user_selections_problem_length(user_selections, specifications)
@@ -590,6 +596,9 @@ def get_query(user_selections):
 
     constraints = " All of the requirements on this list must be met: \n" + must_do + required_structures + must_not_do + "-" + disallowed_structures
     full_query = static_variables.instructions["base_query"] + constraints + "\n-" + subject_request + "\n-" + required_length
+
+    if problem_type == "determine_output":
+        full_query += "For this code block in particular: nested 'for' loops must NOT be used. And ALL calculations must be doable with mental math."
 
     print (f"problem type: {problem_type}")
     print (f"subject: {subject_request}")
@@ -668,7 +677,6 @@ def process_user_selections_subjects(user_selections):
     return f" Generate code from the domain of {chosen_domain_readable} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
 
 def process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications):
-    #TODO: create a function that validates that what is returned matches these specifications
     num_structures = 9
 
     allowed_structures = []
@@ -690,14 +698,9 @@ def process_user_selections_structures_and_difficulty(problem_type, user_selecti
     difficulty_level = int(user_selections['difficulty_level_slider'])
     allowed_structures_permanent = copy.deepcopy(allowed_structures)
 
-    print ("ATTEMPTING TO APPEND FOR LOOPS TO DISALLOWED STRUCTURES")
-    print (difficulty_level, type(difficulty_level))
-    print (disallowed_structures, type(disallowed_structures))
-    print (problem_type, type(problem_type))
-
     #if difficulty < 1 or problem type is determine_output, disallow nested for loops
     if difficulty_level < 2 or problem_type == "determine_output":
-        disallowed_structures.append("nested 'for' loops")
+        disallowed_structures.append('nested for loops')
 
     while difficulty_level > 0 and allowed_structures:
         chosen_index = random.randint(0,len(allowed_structures)-1)

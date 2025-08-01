@@ -53,7 +53,7 @@ def practice(request):
 
             #problem_type,query = utilities.get_query(difficultyLevel, user_selections)
             problem_type, query, specifications = utilities.get_query(user_selections)
-            #print (f'FULL QUERY: {query}')
+            print (f'FULL QUERY: {query}')
             #print (f'SPECIFICATIONS: {specifications}')
             #set problem text to None
             request.session["problem_text"] = None
@@ -61,9 +61,10 @@ def practice(request):
             #query chatgpt and validate its response
             result, chatgpt_text, err, output = utilities.validate_safety_and_query(request, query, temperature, problem_type)
 
-            print (f"Example correct answer before modifications: {chatgpt_text}")
+            #print (f"Example correct answer before modifications: {chatgpt_text}")
+            print (f'Specifications: {specifications}')
 
-            code_changed, chatgpt_text = utilities.validate_against_user_selections(problem_type, specifications, chatgpt_text)
+            code_not_changed, chatgpt_text = utilities.validate_against_user_selections(problem_type, specifications, chatgpt_text)
 
             unmixed_lines = ""
 
