@@ -64,7 +64,10 @@ def practice(request):
             #print (f"Example correct answer before modifications: {chatgpt_text}")
             print (f'Specifications: {specifications}')
 
-            code_not_changed, chatgpt_text = utilities.validate_against_user_selections(problem_type, specifications, chatgpt_text)
+            code_unmodified, chatgpt_text = utilities.validate_against_user_selections(problem_type, specifications, chatgpt_text)
+
+            #TODO: for determine_output problem type, need to call utilities.validate_safety_and_query() here
+            #because we set the answer here. VERY IMPORTANT
 
             unmixed_lines = ""
 
