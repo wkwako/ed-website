@@ -125,12 +125,7 @@ def get_length_specifications(avg_length, cur_length):
     return (True, 0)
 
 def validate_against_user_selections(problem_type, specifications, chatgpt_text):
-    #create new variable new_text, which holds chatgpt without docstrings
-    length_explanation = ""
-    general_explanation = ""
-    meets_selected_structures_specs = True
-    meets_disallowed_structures_specs = True
-
+    #create new code string without docstrings to accurately measure num of code lines
     new_text = copy.deepcopy(chatgpt_text)
     if problem_type == "fill_in_vars":
         indices = [m.start() for m in re.finditer('\"\"\"', new_text)]
@@ -139,35 +134,57 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
             end = indices[i]
             new_text = new_text[:start+3] + ' ' + new_text[end:]
         
-    avg_length = int(specifications["required_length"][0]/specifications["required_length"][1])
-    
-    
     #check length specs
+    avg_length = int(specifications["required_length"][0]/specifications["required_length"][1])
     meets_length_specs, too_long_count = get_length_specifications(avg_length, len(new_text.split("\n")))
+    length_explanation = ""
     if not meets_length_specs:
-        lenth_explanation = f"This code is too long by about {too_long_count} and needs to be shortened. If you need to take out functions to meet length requirements, that's okay. The code must still meet the following requirements:"
+        length_explanation = f"This code is too long by about {too_long_count} and needs to be shortened."
 
     #define class here with ast, check for structures
-    structures_found = detect_structures(new_text[8:-3])
-    print (f"STRUCTURES FOUND: {structures_found}")
-    print (f"")
-    #may not be tracking conditional chains
+    code_string_only = detect_structures(new_text[8:-3])
+
+    #may not be tracking conditional chains?
 
     #if any element in selected_structures is False, flag it
     #if any element in disallowed_structures is True, flag it
-    for keys, value in structures_found.items():
+    should_include = []
+    should_not_include = []
+    for key, value in code_string_only.items():
+        if value is False and key in specifications['selected_structures']:
+            should_include.append(key)
+        elif value is True and key in specifications['disallowed_structures']:
+            should_not_include.append(key)
+    
+    structure_explanation = ""
+    if should_include or should_not_include:
+        structure_explanation = f"The code should contain these structures: {', '.join(specifications['selected_structures'])} and should not include {', '.join(specifications['disallowed_structures'])}. Unfortunately, there are issues."
 
-        pass
+        if should_include:
+            structure_explanation += f" I need you to add these structures: {', '.join(should_include)}."
+        if should_not_include:
+            structure_explanation += f" I need you to remove this structures: {', '.join(should_not_include)}."
 
-    #send query to anthropic saying that parameters have been violated
-    #give original prompt, code, and the issues with it, and ask it to generate a new block of code
+        structure_explanation += " All other structures should remain untouched."
 
-    #check selected_structures
+    if length_explanation or structure_explanation:
+        general_instructions = f" This block of Python code has been generated as a practice problem for a student: \n {chatgpt_text}. \n Unfortunately, there are several issues with it."
+        general_instructions += length_explanation + structure_explanation
+        general_instructions += "If you need to remove or add large chunks of the code to satisfy these requests, please do so. Please keep docstrings the same unless you're modifying their function, and do not count docstring lines as adding to the total length of the code. Otherwise, you can change functions and code as needed. Do not introduce the code or provide a summary of the changes, just output the modified code."
 
-    #check disallowed_structures
+        if not length_explanation and structure_explanation:
+            general_instructions += " The length of the code (not including docstrings) should be as close as possible to the original."
 
+        #send query to anthropic saying that parameters have been violated
+        new_code = anthropic_query(general_instructions)
+        print ("Code did not meet specifications for the following reasons: ")
+        print (f"Code should have included structures but did not: {should_include}")
+        print (f"Code should not have included structures but did: {should_not_include}")
+        return False, new_code
 
-    pass
+    #no issues with the code
+    return True, chatgpt_text
+
 
 def validate_safety_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
     """Queries ChatGPT, then validates the result. Output is a tuple of the form (bool, str, str, str), which maps to
