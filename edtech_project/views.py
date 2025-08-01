@@ -68,6 +68,12 @@ def practice(request):
 
             #TODO: for determine_output problem type, need to call utilities.validate_safety_and_query() here
             #because we set the answer here. VERY IMPORTANT
+            #should we run ALL code through exec()? don't think we need to
+            #1. get code from original query
+            #2. check against user selections, get new code if necessary
+            #3. run through safety checks and confirm code runs
+            #4. if we fail step #3, send with modified query, ask anthropic to fix code
+            #5. run through step 3 again.
 
             unmixed_lines = ""
 

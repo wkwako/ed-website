@@ -192,6 +192,35 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
     return True, chatgpt_text
 
 
+def query_loop(user_selections):
+
+    #1. get code from original query
+    problem_type, query, specifications = get_query(user_selections)
+    #2. check against user selections, get new code if necessary
+    code_unmodified, chatgpt_text = validate_against_user_selections(problem_type, specifications, chatgpt_text)
+
+    fixed_code = copy.deepcopy(chatgpt_text)
+    
+    correct_answer = None
+    attempts = 0
+    success = False
+    while attempts < 3 and not success:
+        #3. run through safety checks and confirm code runs
+        result, correct_answer = validate(fixed_code)
+
+        #no issues
+        if result:
+            break
+
+        #4. code did not run, send to anthropic and ask for a fix
+        code_fix_query = f"There is an issue with this Python code, it is not running: \n {fixed_code}.\nCould you fix the error? Change only as much as you need to in order to fix the error. If there are 'while True' loops, please remove those as well. Just reply with the code, do not introduce it or explain the fixes."
+        fixed_code = anthropic_query(code_fix_query)
+        
+        #increment attempts
+        attempts += 1
+
+    return problem_type, correct_answer
+
 def validate_safety_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
     """Queries ChatGPT, then validates the result. Output is a tuple of the form (bool, str, str, str), which maps to
        (did query succeed, chatgpt_text response if success, error message if failure, code output).
@@ -221,7 +250,7 @@ def validate_safety_and_query(request, query, temperature, problem_type) -> tupl
             result, output = True, ""
 
         else:
-            result, output = validate(chatgpt_text, problem_type)
+            result, output = validate(chatgpt_text)
 
         if not result:
             fail_count += 1
@@ -358,8 +387,8 @@ async def double_query(query, temperature=0.5):
         result1, result2 = await asyncio.gather(chatgpt_task, anthropic_task)
         return (result1, result2)
 
-def validate(text_query,problem_type) -> tuple[bool, str]:
-    """Runs the ChatGPT-generated problem to retrieve its output. Performs safety checks."""
+def validate(text_query) -> tuple[bool, str]:
+    """Performs safety checks, then runs the problem using exec() and stores its output."""
 
     #removes triple backticks, formats text_query into a string
     text_query = text_query[9:-3]
