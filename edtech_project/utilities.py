@@ -11,9 +11,12 @@ import re
 import hashlib
 import asyncio
 import aiohttp
+from io import StringIO
 import anthropic
 import copy
 from . import static_variables
+from contextlib import redirect_stdout
+
 
 #START CODE FROM CHATGPT
 def detect_structures(code: str):
@@ -133,8 +136,10 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
             start = indices[i-1]
             end = indices[i]
             new_text = new_text[:start+3] + ' ' + new_text[end:]
-        
+    
+
     #check length specs
+    print ("GETTING LENGTH SPECIFICATIONS")
     avg_length = int(specifications["required_length"][0]/specifications["required_length"][1])
     meets_length_specs, too_long_count = get_length_specifications(avg_length, len(new_text.split("\n")))
     length_explanation = ""
@@ -193,10 +198,16 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
 
 
 def query_loop(user_selections):
-
-    #1. get code from original query
+    result = True
+    #1. get query
+    print ("GETTING ORIGINAL QUERY")
     problem_type, query, specifications = get_query(user_selections)
-    #2. check against user selections, get new code if necessary
+
+    #2. send query to chatgpt
+    chatgpt_text = chatgpt_query(query)
+
+    #3. check against user selections, get new code if necessary
+    print ("VALIDATING CODE AGAINST USER SELECTIONS")
     code_unmodified, chatgpt_text = validate_against_user_selections(problem_type, specifications, chatgpt_text)
 
     fixed_code = copy.deepcopy(chatgpt_text)
@@ -204,22 +215,29 @@ def query_loop(user_selections):
     correct_answer = None
     attempts = 0
     success = False
+    print ("STARTING LOOP")
     while attempts < 3 and not success:
-        #3. run through safety checks and confirm code runs
-        result, correct_answer = validate(fixed_code)
+        #4. run through safety checks and confirm code runs
+        code_is_good, correct_answer = validate(fixed_code)
 
         #no issues
-        if result:
+        if code_is_good:
+            print ("CODE IS VALID")
             break
 
-        #4. code did not run, send to anthropic and ask for a fix
-        code_fix_query = f"There is an issue with this Python code, it is not running: \n {fixed_code}.\nCould you fix the error? Change only as much as you need to in order to fix the error. If there are 'while True' loops, please remove those as well. Just reply with the code, do not introduce it or explain the fixes."
+        #5. code did not run, send to anthropic and ask for a fix
+        print ("CODE DID NOT RUN, SENDING TO ANTHROPIC WITH INSTRUCTIONS")
+        code_fix_query = f"There is an issue with this Python code, it is not running: \n {fixed_code}.\nCould you fix the error? Change only as much as you need to in order to fix the error. If there are 'while True' loops, please remove those as well. Do not add any comments or annotations to the code that do not already exist. Just reply with the code, do not introduce it or explain the fixes."
         fixed_code = anthropic_query(code_fix_query)
         
         #increment attempts
         attempts += 1
 
-    return problem_type, correct_answer
+    if attempts >= 3:
+        result = False
+
+
+    return result, problem_type, correct_answer, fixed_code
 
 def validate_safety_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
     """Queries ChatGPT, then validates the result. Output is a tuple of the form (bool, str, str, str), which maps to
@@ -270,7 +288,7 @@ def validate_safety_and_query(request, query, temperature, problem_type) -> tupl
     #call into validate 3 times. if we fail, 
 
 
-def chatgpt_query(query, temperature, raw_response=False, model="gpt-4.1-mini"):
+def chatgpt_query(query, temperature=0.5, raw_response=False, model="gpt-4.1-mini"):
     """Given a query and a temperature, queries ChatGPT. If raw_response is True,
        returns the unprocessed ChatGPT response. If raw_request is False, returns
        only the text content of the ChatGPT response.
@@ -406,9 +424,15 @@ def validate(text_query) -> tuple[bool, str]:
         local_vars = {}
 
         #we trust the input and users don't have access to query chatgpt, this is safe
-        exec(text_query, local_vars, local_vars)
+        # exec(text_query, local_vars, local_vars)
 
-        output = local_vars['output']
+        # output = local_vars['output']
+
+        f = StringIO()
+        with redirect_stdout(f):
+            local_vars = {}
+            exec(text_query, local_vars, local_vars)
+            output = f.getvalue()
 
         #if output is not a string, turn it into one
         if type(output) != str:
@@ -617,7 +641,7 @@ def get_query(user_selections):
     problem_types = ["determine_output", "fill_in_vars", "drag_and_drop",]
     problem_type = problem_types[random.randint(0, len(problem_types)-1)]
 
-    problem_type = "determine_output"
+    problem_type = "drag_and_drop"
     required_structures, disallowed_structures, specifications = process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications)
     subject_request = process_user_selections_subjects(user_selections)
     required_length, specifications = process_user_selections_problem_length(user_selections, specifications)

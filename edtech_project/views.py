@@ -52,19 +52,23 @@ def practice(request):
 
 
             #problem_type,query = utilities.get_query(difficultyLevel, user_selections)
-            problem_type, query, specifications = utilities.get_query(user_selections)
-            print (f'FULL QUERY: {query}')
+            #problem_type, query, specifications = utilities.get_query(user_selections)
+            #print (f'FULL QUERY: {query}')
             #print (f'SPECIFICATIONS: {specifications}')
             #set problem text to None
             request.session["problem_text"] = None
 
             #query chatgpt and validate its response
-            result, chatgpt_text, err, output = utilities.validate_safety_and_query(request, query, temperature, problem_type)
+            #result, chatgpt_text, err, output = utilities.validate_safety_and_query(request, query, temperature, problem_type)
 
             #print (f"Example correct answer before modifications: {chatgpt_text}")
-            print (f'Specifications: {specifications}')
+            #print (f'Specifications: {specifications}')
 
-            code_unmodified, chatgpt_text = utilities.validate_against_user_selections(problem_type, specifications, chatgpt_text)
+            #code_unmodified, chatgpt_text = utilities.validate_against_user_selections(problem_type, specifications, chatgpt_text)
+
+            print ("STARTING QUERY LOOP")
+            result, problem_type, output, chatgpt_text = utilities.query_loop(user_selections)
+            print ("ENDING QUERY LOOP")
 
             #TODO: for determine_output problem type, need to call utilities.validate_safety_and_query() here
             #because we set the answer here. VERY IMPORTANT
@@ -131,8 +135,8 @@ def practice(request):
             
             #code is not valid
             return JsonResponse({
-                "chatgpt_response": err,
-                "problem_type": err,
+                "chatgpt_response": "Attempts exceeded.",
+                "problem_type": "Attempts exceeded.",
                 })
             
         #something has gone terribly wrong
