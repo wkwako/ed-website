@@ -19,22 +19,28 @@ function getCookie(name) {
 
 const csrftoken = getCookie('csrftoken');
 
-/* Adds listeners for sliders, retrieves values */
+
+// adds an event listener to loading the DOM content. fires once when it loads for the first time
 window.addEventListener('DOMContentLoaded', () => {
+
+    // ----- slider logic -----
+    // difficulty slider logic
     const difficultySlider = document.getElementById('difficulty-slider');
     if (difficultySlider) {
-        // restore saved value
+
+        // retrieves stored values
         const storedValue = localStorage.getItem('difficultySlider');
         if (storedValue !== null) {
             difficultySlider.value = storedValue;
         }
 
-        // saves on change (update local storage)
+        // adds listener to save user changes and updates local storage
         difficultySlider.addEventListener('input', () => {
             localStorage.setItem('difficultySlider', difficultySlider.value);
         });
     }
 
+    // problem length slider logic
     const problemLengthSlider = document.getElementById('problem-length-slider');
     if (problemLengthSlider) {
         const storedValue = localStorage.getItem('problemLengthSlider');
@@ -42,22 +48,25 @@ window.addEventListener('DOMContentLoaded', () => {
             problemLengthSlider.value = storedValue;
         }
 
+        // adds listener to save user changes and updates local storage
         problemLengthSlider.addEventListener('input', () => {
             localStorage.setItem('problemLengthSlider', problemLengthSlider.value);
         });
     }
 
+    // ----- checkbox logic -----
     const checkboxStates = JSON.parse(localStorage.getItem('checkboxStates') || '{}');
     const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
 
-    // Restore saved states first
+    // retrieves stored values
     allCheckboxes.forEach(cb => {
         if (checkboxStates.hasOwnProperty(cb.value)) {
             cb.checked = checkboxStates[cb.value];
         }
     });
 
-    // Check if *any* subject-related checkboxes are checked
+    // ----- default specification logic -----
+    // check if *any* subject-related checkboxes are checked
     const subjectCheckboxes = [...allCheckboxes].filter(cb =>
         ['physics', 'chemistry', 'biology', 'earth-science', 'computer-science', 'math', 'logic-and-reasoning', 'linguistics', 'geography', 'medicine-anatomy', 'adv-physics', 'adv-chemistry', 'adv-biology', 'adv-earth-science', 'adv-computer-science', 'adv-math'].includes(cb.id)
     );
@@ -66,7 +75,7 @@ window.addEventListener('DOMContentLoaded', () => {
 
     if (!anySubjectChecked) {
 
-        // No subject checked, default to computer-science and math
+        // no subjects checked, default to computer science and math
         ['computer-science', 'math'].forEach(id => {
             const cb = document.getElementById(id);
             if (cb) {
@@ -74,17 +83,48 @@ window.addEventListener('DOMContentLoaded', () => {
                 checkboxStates[cb.value] = true;
             }
         });
-        // Save the updated states
+        
+        // update local storage with the defaults
         localStorage.setItem('checkboxStates', JSON.stringify(checkboxStates));
     }
 
-    // Add event listeners for saving changes
+    // adds listener to save user changes and updates local storage
     allCheckboxes.forEach(cb => {
         cb.addEventListener('change', () => {
             checkboxStates[cb.value] = cb.checked;
             localStorage.setItem('checkboxStates', JSON.stringify(checkboxStates));
         });
     });
+
+    // ----- no subject warning logic -----
+    const subjectCheckboxIds = [
+    'physics', 'chemistry', 'biology', 'earth-science',
+    'computer-science', 'math', 'logic-and-reasoning', 'linguistics',
+    'geography', 'medicine-anatomy', 'adv-physics', 'adv-chemistry',
+    'adv-biology', 'adv-earth-science', 'adv-computer-science', 'adv-math'
+    ];
+
+    const warningElement = document.getElementById('no-subjects-warning');
+    warningElement.style.display = 'none';
+
+    // function to check subject checkbox states and toggle warning
+    function updateWarningVisibility() {
+        const subjectCheckboxes = subjectCheckboxIds.map(id => document.getElementById(id));
+        const anySubjectChecked = subjectCheckboxes.some(cb => cb.checked);
+        warningElement.style.display = anySubjectChecked ? 'none' : 'block';
+    }
+
+    // call once at startup to set initial warning state
+    updateWarningVisibility();
+
+    allCheckboxes.forEach(cb => {
+        cb.addEventListener('change', () => {
+        // existing save-to-localStorage code...
+
+        updateWarningVisibility(); // toggle warning on each checkbox change
+        });
+    });
+
 });
 
 //variable for submitSkeleton delay

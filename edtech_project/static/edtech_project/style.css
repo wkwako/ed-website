@@ -219,6 +219,16 @@ input[type="range"] {
     border-color: transparent;
 }
 
+/* No subjects warning */
+
+#no-subjects-warning {
+    font-size: 15px;
+    color: #fa3838;
+    margin-left: 5px;
+    padding: 0;
+    display: none;
+}
+
 
 /* Chatgpt stuff */
 
