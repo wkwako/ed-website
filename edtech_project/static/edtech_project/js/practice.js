@@ -47,23 +47,44 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    // Adds listeners for checkboxes, retrieves values
     const checkboxStates = JSON.parse(localStorage.getItem('checkboxStates') || '{}');
-
     const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
+
+    // Restore saved states first
     allCheckboxes.forEach(cb => {
-        // restore saved value
         if (checkboxStates.hasOwnProperty(cb.value)) {
             cb.checked = checkboxStates[cb.value];
         }
+    });
 
-        // saves on change (update local storage)
+    // Check if *any* subject-related checkboxes are checked
+    const subjectCheckboxes = [...allCheckboxes].filter(cb =>
+        ['physics', 'chemistry', 'biology', 'earth-science', 'computer-science', 'math', 'logic-and-reasoning', 'linguistics', 'geography', 'medicine-anatomy', 'adv-physics', 'adv-chemistry', 'adv-biology', 'adv-earth-science', 'adv-computer-science', 'adv-math'].includes(cb.id)
+    );
+
+    const anySubjectChecked = subjectCheckboxes.some(cb => cb.checked);
+
+    if (!anySubjectChecked) {
+
+        // No subject checked, default to computer-science and math
+        ['computer-science', 'math'].forEach(id => {
+            const cb = document.getElementById(id);
+            if (cb) {
+                cb.checked = true;
+                checkboxStates[cb.value] = true;
+            }
+        });
+        // Save the updated states
+        localStorage.setItem('checkboxStates', JSON.stringify(checkboxStates));
+    }
+
+    // Add event listeners for saving changes
+    allCheckboxes.forEach(cb => {
         cb.addEventListener('change', () => {
             checkboxStates[cb.value] = cb.checked;
             localStorage.setItem('checkboxStates', JSON.stringify(checkboxStates));
         });
     });
-
 });
 
 //variable for submitSkeleton delay
