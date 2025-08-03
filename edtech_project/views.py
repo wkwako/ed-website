@@ -42,8 +42,8 @@ def practice(request):
             request.session["correct_answer"] = None
             body = json.loads(request.body)
             #query = body.get("message", "An error has occurred when generating the query.")
-            temperature = 1.0
-            difficultyLevel = body.get('difficulty_level', 'undefined')
+            #temperature = 1.0
+            #difficultyLevel = body.get('difficulty_level', 'undefined')
             #print (difficultyLevel)
 
             user_selections = body.get('user_selections', None)
@@ -196,7 +196,7 @@ def check_answer(request):
         problem_text = request.session.get("problem_text", "")[10:-3]
 
         #stores the problem in the db
-        utilities.store_in_db(request, current_user, difficulty, problem_text, is_user_correct, problem_type, correct_answer)
+        utilities.store_in_db(request, current_user, problem_text, is_user_correct, problem_type, correct_answer)
 
         #user is correct, send 'Correct!' message to frontend
         if is_user_correct:
@@ -292,7 +292,7 @@ def check_answer_fill_in_vars(request):
         reply = None
         data = json.loads(request.body)
         user_input = data.get("user_input", "")
-        difficultyLevel = data.get("difficulty", "undefined")
+        #difficultyLevel = data.get("difficulty", "undefined")
         initial_chatGPTResponse = data.get("initial_chatGPTResponse", "")
         problem_type = data.get("problem_type", "")
         correct_answer = data.get("correct_answer", "")[9:-3]
@@ -382,7 +382,7 @@ def check_answer_fill_in_vars(request):
 
         #need to ask chatGPT to generate correct_code
         current_user = request.user
-        utilities.store_in_db(request, current_user, difficultyLevel, user_input, is_user_correct, problem_type, correct_answer)
+        utilities.store_in_db(request, current_user, user_input, is_user_correct, problem_type, correct_answer)
 
         return JsonResponse({"success": True, "message": reply})
 
@@ -395,7 +395,7 @@ def check_answer_drag_and_drop(request):
     if request.method == "POST":
         data = json.loads(request.body)
         user_input = data.get("user_input", "")
-        difficultyLevel = data.get("difficulty", "undefined")
+        #difficultyLevel = data.get("difficulty", "undefined")
         initial_chatGPTResponse = data.get("initial_chatGPTResponse", "")
         problem_type = data.get("problem_type", "")
         final_code = data.get("final_code", "")
@@ -410,17 +410,17 @@ def check_answer_drag_and_drop(request):
 
             except:
                 #stores the problem in the db
-                utilities.store_in_db(request, current_user, difficultyLevel, final_code, False, problem_type, initial_chatGPTResponse)
+                utilities.store_in_db(request, current_user, final_code, False, problem_type, initial_chatGPTResponse)
                 return JsonResponse({"success": True, "message": "Incorrect"})
             
         output = f.getvalue()
         if output.strip() == correct_answer.strip():
             #stores the problem in the db
-            utilities.store_in_db(request, current_user, difficultyLevel, final_code, True, problem_type, initial_chatGPTResponse)
+            utilities.store_in_db(request, current_user, final_code, True, problem_type, initial_chatGPTResponse)
             return JsonResponse({"success": True, "message": "Correct!"})
         
         #stores the problem in the db
-        utilities.store_in_db(request, current_user, difficultyLevel, final_code, True, problem_type, initial_chatGPTResponse)
+        utilities.store_in_db(request, current_user, final_code, True, problem_type, initial_chatGPTResponse)
         return JsonResponse({"success": True, "message": "Correct!"})
 
         # try:
@@ -450,7 +450,7 @@ def generate_hint(request):
     """Generates a hint for the user based on the problem type."""
     if request.method == "POST":
         data = json.loads(request.body)
-        difficultyLevel = data.get("difficulty", "undefined")
+        #difficultyLevel = data.get("difficulty", "undefined")
         user_input = data.get("user_input", "")
         chatGPT_response = data.get("chatGPTResponse")
         problem_type = data.get("problem_type")

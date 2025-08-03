@@ -119,13 +119,18 @@
 <script src="https://cdn.jsdelivr.net/npm/sortablejs@latest/Sortable.min.js"></script>
 
 <!--START CODE FROM CHATGPT-->
-
+<!-- 
 {% csrf_token %}
 <button class="button-difficulty" id="button-easy" data-difficulty="Easy" onclick="handleButtonPress('Easy')"> Easy </button>
 {% csrf_token %}
 <button class="button-difficulty" id="button-medium" data-difficulty="Medium" onclick="handleButtonPress('Medium')"> Medium </button>
 {% csrf_token %}
 <button class="button-difficulty" id="button-hard" data-difficulty="Hard" onclick="handleButtonPress('Hard')"> Hard </button>
+-->
+
+{% csrf_token %}
+<button class="button-generate" id="button-generate" onclick="handleButtonPress()"> Generate </button>
+
 
 {% csrf_token %}
 <button class="reset-problem" id="reset-problem" style="visibility: hidden" onclick="handleResetProblem()"> Reset Problem</button>

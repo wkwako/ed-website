@@ -105,7 +105,7 @@ let initial_chatGPTresponse = "";
  * Called when a user clicks a difficulty button ("Easy", "Medium", "Hard").
  * Generates a problem for the user to solve.
  */
-function fetchChatGPTResponse(difficultyLevel, retries=3, delay=1000) {
+function fetchChatGPTResponse(retries=3, delay=1000) {
 
     //disables problem generation until current request is processed (and shown to user)
     if (isFetching) {
@@ -176,7 +176,6 @@ function fetchChatGPTResponse(difficultyLevel, retries=3, delay=1000) {
 
         //sends these variables to /practice/
         body: JSON.stringify({
-            difficulty_level: difficultyLevel,
             user_selections: userSelections,
         })
     })
@@ -435,7 +434,7 @@ function fetchChatGPTResponse(difficultyLevel, retries=3, delay=1000) {
         // Retry with exponential backoff
         console.log(`Retrying... Attempts left: ${retries}`);
         setTimeout(() => {
-            fetchChatGPTResponse(difficultyLevel, retries - 1, delay * 2); // Increase delay for next attempt
+            fetchChatGPTResponse(retries - 1, delay * 2); // Increase delay for next attempt
         }, delay);
 
         } else {
@@ -555,10 +554,10 @@ function setDifficulty(level) {
 /**
  * Handles the button press; gets response from backend
  */ 
-function handleButtonPress(difficultyLevel) {
+function handleButtonPress() {
     //retrieve session data, see which prompt was generated
-    fetchChatGPTResponse(difficultyLevel)
-    setDifficulty(difficultyLevel)
+    fetchChatGPTResponse()
+    //setDifficulty(difficultyLevel)
     
 }
 
@@ -570,7 +569,7 @@ function generateHint() {
     let hints = document.getElementById("hints");
     let userInput = document.getElementById("user-input").value;
     var chatResponseDiv = document.getElementById('chatgpt-response').textContent;
-    let difficultyLevel = document.getElementById('difficulty').value;
+    //let difficultyLevel = document.getElementById('difficulty').value;
     let problemType = document.getElementById('problem-type').value;
 
     let hintsSkeletonLoader = document.getElementById('hints-skeleton-loader');
@@ -587,7 +586,7 @@ function generateHint() {
         credentials: 'same-origin',
         body: JSON.stringify({
             user_input: userInput,
-            difficulty: difficultyLevel,
+            //difficulty: difficultyLevel,
             chatGPTResponse: chatResponseDiv,
             problem_type: problemType,
         })

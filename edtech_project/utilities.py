@@ -507,7 +507,7 @@ def mix_lines(code,exclusions=[]):
 #TODO: this if statement could be made more efficient by hashing/indexing the code so we aren't text matching
 #the whole thing
 #TODO: cache most recent unanswered problem, show that to the user first, or show in history
-def store_in_db(request, current_user, difficulty, problem_text, is_user_correct, problem_type, correct_code):
+def store_in_db(request, current_user, problem_text, is_user_correct, problem_type, correct_code):
     """Stores a problem in the user's history if it does not already exist."""
     if request.user.is_authenticated:
         if problem_type == "determine_output":
@@ -517,7 +517,7 @@ def store_in_db(request, current_user, difficulty, problem_text, is_user_correct
         elif problem_type == "drag_and_drop":
             problem_hash = hashlib.sha256(correct_code.encode()).hexdigest()
         if not UserHistory.objects.filter(user=current_user, problem_hash=problem_hash).exists() and problem_hash:
-            UserHistory.objects.create(user=current_user, problem_text=problem_text, difficulty=difficulty, is_correct=is_user_correct, problem_type=problem_type, problem_hash=problem_hash, correct_answer=correct_code)
+            UserHistory.objects.create(user=current_user, problem_text=problem_text, is_correct=is_user_correct, problem_type=problem_type, problem_hash=problem_hash, correct_answer=correct_code)
 
 #START CODE FROM CHATGPT
 def normalize_match(match):
