@@ -39,6 +39,7 @@ instructions = {"base_query": "I\'d like you to generate a snippet of Python cod
                                      "do-not": ["Do not include descriptions of the code.",
                                                 "Do not use input() or random() functions in the code.",
                                                 "Do not include descriptions of, or introductions to, the code. Just respond with the code.",
+                                                "Do not include comments, annotations, or docstrings in the code."
                                                 ],
                 },
                 "code_mode_completion": {"do": ["Use i, j, and k for iterators in for loops.",

@@ -120,12 +120,17 @@ def get_length_specifications(avg_length, cur_length):
         tolerance = int(avg_length*0.40)
 
     upper_bound = avg_length + tolerance
+    lower_bound = avg_length - tolerance
 
     print (f'AVG LENGTH: {avg_length}')
     print (f'CUR LENGTH: {cur_length}')
 
     if cur_length > upper_bound:
         diff = cur_length - upper_bound
+        return (False, diff)
+    
+    elif cur_length < lower_bound:
+        diff = lower_bound - cur_length
         return (False, diff)
 
     return (True, 0)
@@ -144,10 +149,14 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
     #check length specs
     print ("GETTING LENGTH SPECIFICATIONS")
     avg_length = int((specifications["required_length"][0] + specifications["required_length"][1])/2)
-    meets_length_specs, too_long_count = get_length_specifications(avg_length, len(new_text.split("\n")))
+    meets_length_specs, diff = get_length_specifications(avg_length, len(new_text.split("\n")))
     length_explanation = ""
     if not meets_length_specs:
-        length_explanation = f"This code is too long by about {too_long_count} and needs to be shortened."
+        if diff > 0:
+            length_explanation = f"This code is too long by about {diff} and needs to be shortened."
+        else:
+            length_explanation = f"This code is too short by about {abs(diff)} and needs to be lengthened."
+
 
     #define class here with ast, check for structures
     detected_structures = detect_structures(new_text[8:-3])
@@ -644,7 +653,7 @@ def get_query(user_selections):
     problem_types = ["determine_output", "fill_in_vars", "drag_and_drop",]
     problem_type = problem_types[random.randint(0, len(problem_types)-1)]
 
-    problem_type = "fill_in_vars"
+    problem_type = "drag_and_drop"
     required_structures, disallowed_structures, specifications = process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications)
     subject_request = process_user_selections_subjects(user_selections)
     required_length, specifications = process_user_selections_problem_length(user_selections, specifications)
@@ -794,8 +803,8 @@ def process_user_selections_problem_length(user_selections, specifications):
     #and relatively narrower on higher lengths (10-13 vs 120-130, for example)
     base_start = 10
     base_end = 13
-    mod1 = 0.95
-    mod2 = 1.05
+    mod1 = 0.5
+    mod2 = 0.6
     starting_length = int(base_start*problem_length*mod1)
     ending_length = int(base_end*problem_length*mod2)
 
