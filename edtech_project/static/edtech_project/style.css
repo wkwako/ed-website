@@ -36,12 +36,13 @@
     display: flex;
     margin: 2px 4px;
     padding: 0px;
-    justify-content: flex-start; /* Justify all content within container to start */
+    justify-content: space-between;
+    gap: 70px;
 }
 
 #options-button {
-    align-self: center;
-    margin-left: auto; /* ...then set margin-left to auto which makes this single element look right justified*/
+    flex: 0;
+    align-self: flex-start;
     background: none;
     border: none;
     cursor: pointer;
@@ -49,6 +50,10 @@
     font-family: Georgia;
     font-size: 15px;
     letter-spacing: 0.5px;
+    margin-top: 20px;
+    padding-right: 5px;
+    margin-left: auto;
+    white-space: nowrap;
 }
 
 #options-button::after { /* Creates a triangle  */
@@ -300,7 +305,7 @@ input[type="range"] {
     text-align: center;
     background: #19003f;
     color: #dddddd;
-    padding: 8px 12px;
+    padding: 7px 12px;
     margin-right: 8px;
     font-family: Roboto;
     letter-spacing: 0.5px;
@@ -373,6 +378,7 @@ input[type="range"] {
 }
 
 .practice-description{
+    flex: 6;
     font-family: Georgia;
     color: #e6fffb;
     text-shadow: 0.5px 0 0 #000, 0 -0.5px 0 #000, 0 0.5px 0 #000, -0.5px 0 0 #000;

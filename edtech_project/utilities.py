@@ -705,7 +705,7 @@ def get_query_old(difficultyLevel) -> tuple[str, str]:
     return problem_type, query
 
 def process_user_selections_subjects(user_selections):
-    num_structures = 8
+    num_structures = 7
     allowed_domains = []
     count = 0
     
@@ -748,7 +748,7 @@ def process_user_selections_subjects(user_selections):
     return f" Generate code from the domain of {chosen_domain_readable} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
 
 def process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications):
-    num_structures = 8
+    num_structures = 7
 
     allowed_structures = []
     disallowed_structures = []

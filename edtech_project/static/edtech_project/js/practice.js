@@ -23,13 +23,13 @@ const csrftoken = getCookie('csrftoken');
 window.addEventListener('DOMContentLoaded', () => {
     const difficultySlider = document.getElementById('difficulty-slider');
     if (difficultySlider) {
-        // Restore saved value
+        // restore saved value
         const storedValue = localStorage.getItem('difficultySlider');
         if (storedValue !== null) {
             difficultySlider.value = storedValue;
         }
 
-        // Save on change
+        // saves on change (update local storage)
         difficultySlider.addEventListener('input', () => {
             localStorage.setItem('difficultySlider', difficultySlider.value);
         });
@@ -47,17 +47,17 @@ window.addEventListener('DOMContentLoaded', () => {
         });
     }
 
-    /* Adds listeners for checkboxes, retrieves values */
+    // Adds listeners for checkboxes, retrieves values
     const checkboxStates = JSON.parse(localStorage.getItem('checkboxStates') || '{}');
 
     const allCheckboxes = document.querySelectorAll('input[type="checkbox"]');
     allCheckboxes.forEach(cb => {
-        // Restore saved state
+        // restore saved value
         if (checkboxStates.hasOwnProperty(cb.value)) {
             cb.checked = checkboxStates[cb.value];
         }
 
-        // Only update this checkbox on change
+        // saves on change (update local storage)
         cb.addEventListener('change', () => {
             checkboxStates[cb.value] = cb.checked;
             localStorage.setItem('checkboxStates', JSON.stringify(checkboxStates));
@@ -561,12 +561,75 @@ function handleButtonPress() {
     
 }
 
+//stores information for all preset buttons
 const presets = {
-    
+    easy: {
+        difficulty: 1,
+        problemLength: 1,
+        checkboxes: {
+            "enumerate": false,
+            "zip": false,
+            "any/all": false,
+            "map/filter": false,
+            "data-slicing": false,
+            "comprehensions": false,
+            "lambda-functions": false,
+            "args-and-kwargs": false,
+        }
+    },
+
+    medium: {
+        difficulty: 2,
+        problemLength: 3,
+        checkboxes: {
+            "enumerate": true,
+            "zip": true,
+            "any/all": false,
+            "map/filter": false,
+            "data-slicing": true,
+            "comprehensions": true,
+            "lambda-functions": false,
+            "args-and-kwargs": false,
+        }
+    },
+
+    hard: {
+        difficulty: 3,
+        problemLength: 7,
+        checkboxes: {
+            "enumerate": true,
+            "zip": true,
+            "any/all": true,
+            "map/filter": true,
+            "data-slicing": true,
+            "comprehensions": true,
+            "lambda-functions": true,
+            "args-and-kwargs": true,
+        }
+    }
 }
 
-function handlePreset() {
+//applies presets
+function applyPreset(presetName) {
+    const preset = presets[presetName];
+    if (!preset) return
 
+    //update sliders
+    document.getElementById("difficulty-slider").value = preset.difficulty;
+    document.getElementById("problem-length-slider").value = preset.problemLength;
+
+    //update checkboxes
+    const allCheckboxes = document.querySelectorAll('input[type=checkbox]');
+    allCheckboxes.forEach(cb => {
+        if (preset.checkboxes.hasOwnProperty(cb.value)) {
+            cb.checked = preset.checkboxes[cb.value];
+        }
+    })
+
+    //update local storage
+    localStorage.setItem('difficultySlider', preset.difficulty);
+    localStorage.setItem('problemLengthSlider', preset.problemLength);
+    localStorage.setItem('checkboxStates', JSON.stringify(preset.checkboxes));
 }
 
 /**

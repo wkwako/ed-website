@@ -34,7 +34,7 @@
 
 <!-- Instructions for generating problems, and button the opens the generation options panel -->
 <div id="instructions-and-options-box">
-    <h3 class="practice-description">Please use the buttons below to generate problems.</h3>
+    <h3 class="practice-description">Please use the button below to generate problems, and the options on the right to control structure and subject generation.</h3>
     <button id="options-button"> Generation Options </button>
 </div>
 
@@ -46,6 +46,7 @@
 
         <div id="columns">
             <!-- The structures column -->
+             <!--If adding/removing a structure, "num_structures" in utilities.py must also be updated-->
             <div id="structures">
                 <h3 class="options-panel-title">Structures/syntax</h3>
                 <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="enumerate"> </label> Enumerate() </div>
@@ -53,7 +54,6 @@
                 <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="any/all"> </label> Any()/all() </div>
                 <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="map/filter"> </label> Map()/filter() </div>
                 <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="data-slicing"> </label> Data slicing </div>
-                <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="conditional-chaining"> </label> Conditional chaining </div>
                 <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="comprehensions"> </label> List/dict comprehensions </div>
                 <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="lambda-functions"> </label> Lambda functions </div>
                 <div class="checkbox-row"> <label> <input type="checkbox" name="structure" value="args-and-kwargs"> </label> Args and Kwargs </div>
@@ -103,9 +103,9 @@
             <div id="presets-group">
                 <h3 class="options-panel-title">Presets: </h3>
                 <div id="presets">
-                    <button class="preset-button" id="preset-easy"> Easy </button>
-                    <button class="preset-button" id="preset-medium"> Medium </button>
-                    <button class="preset-button" id="preset-hard"> Hard </button>
+                    <button class="preset-button" id="preset-easy" onclick="applyPreset('easy')"> Easy </button>
+                    <button class="preset-button" id="preset-medium" onclick="applyPreset('medium')"> Medium </button>
+                    <button class="preset-button" id="preset-hard" onclick="applyPreset('hard')"> Hard </button>
                 </div>
             </div>
         </div>
