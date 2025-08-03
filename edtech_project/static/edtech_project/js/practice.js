@@ -561,6 +561,14 @@ function handleButtonPress() {
     
 }
 
+const presets = {
+    
+}
+
+function handlePreset() {
+
+}
+
 /**
  * Called when the user clicks the 'Get a hint!' button.
  * Sends a query to ChatGPT that returns a hint for the user.

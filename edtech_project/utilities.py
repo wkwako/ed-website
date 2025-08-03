@@ -121,6 +121,9 @@ def get_length_specifications(avg_length, cur_length):
 
     upper_bound = avg_length + tolerance
 
+    print (f'AVG LENGTH: {avg_length}')
+    print (f'CUR LENGTH: {cur_length}')
+
     if cur_length > upper_bound:
         diff = cur_length - upper_bound
         return (False, diff)
@@ -140,7 +143,7 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
 
     #check length specs
     print ("GETTING LENGTH SPECIFICATIONS")
-    avg_length = int(specifications["required_length"][0]/specifications["required_length"][1])
+    avg_length = int((specifications["required_length"][0] + specifications["required_length"][1])/2)
     meets_length_specs, too_long_count = get_length_specifications(avg_length, len(new_text.split("\n")))
     length_explanation = ""
     if not meets_length_specs:
@@ -641,7 +644,7 @@ def get_query(user_selections):
     problem_types = ["determine_output", "fill_in_vars", "drag_and_drop",]
     problem_type = problem_types[random.randint(0, len(problem_types)-1)]
 
-    problem_type = "drag_and_drop"
+    problem_type = "fill_in_vars"
     required_structures, disallowed_structures, specifications = process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications)
     subject_request = process_user_selections_subjects(user_selections)
     required_length, specifications = process_user_selections_problem_length(user_selections, specifications)
@@ -693,7 +696,7 @@ def get_query_old(difficultyLevel) -> tuple[str, str]:
     return problem_type, query
 
 def process_user_selections_subjects(user_selections):
-    num_structures = 9
+    num_structures = 8
     allowed_domains = []
     count = 0
     
@@ -736,7 +739,7 @@ def process_user_selections_subjects(user_selections):
     return f" Generate code from the domain of {chosen_domain_readable} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
 
 def process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications):
-    num_structures = 9
+    num_structures = 8
 
     allowed_structures = []
     disallowed_structures = []

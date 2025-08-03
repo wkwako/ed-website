@@ -70,14 +70,9 @@ def practice(request):
             result, problem_type, output, chatgpt_text = utilities.query_loop(user_selections)
             print ("ENDING QUERY LOOP")
 
-            #TODO: for determine_output problem type, need to call utilities.validate_safety_and_query() here
-            #because we set the answer here. VERY IMPORTANT
-            #should we run ALL code through exec()? don't think we need to
-            #1. get code from original query
-            #2. check against user selections, get new code if necessary
-            #3. run through safety checks and confirm code runs
-            #4. if we fail step #3, send with modified query, ask anthropic to fix code
-            #5. run through step 3 again.
+            if chatgpt_text[-3:] != "```":
+                chatgpt_text += "```"
+
 
             unmixed_lines = ""
 
@@ -109,10 +104,6 @@ def practice(request):
 
             elif problem_type == "drag_and_drop":
                 chatgpt_text = chatgpt_text[9:-3]
-                #code_lines = chatgpt_text.split("\n")
-                #print (f'CODE LINES: {code_lines}')
-                #exclusions = utilities.lines_to_exclude(code_lines)
-                #print (f'EXCLUSIONS: {exclusions}')
                 unmixed_lines = copy.deepcopy(chatgpt_text)
                 chatgpt_text = utilities.mix_lines(chatgpt_text)
 
@@ -124,7 +115,6 @@ def practice(request):
                     print (f'normalized correct answer: {output}')
                     request.session["correct_answer"] = output
 
-                #variables that are sent back to the front end, processed by xhr.load()
                 #print (f'SENDING BACK CORRECT ANSWER AS: {output}')
                 return JsonResponse({
                     "chatgpt_response": chatgpt_text,
