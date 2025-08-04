@@ -111,26 +111,29 @@ def detect_structures(code: str):
 
 def get_length_specifications(avg_length, cur_length):
     if avg_length <= 20:
-        tolerance = 10
+        tolerance = 6
     elif avg_length <= 50:
-        tolerance = 30
+        tolerance = 20
     elif avg_length <= 100:
-        tolerance = 40
+        tolerance = 30
     else:
         tolerance = int(avg_length*0.40)
 
     upper_bound = avg_length + tolerance
     lower_bound = avg_length - tolerance
 
-    #print (f'AVG LENGTH: {avg_length}')
-    #print (f'CUR LENGTH: {cur_length}')
+    print (f"LOWER BOUND: {lower_bound}")
+    print (f"UPPER BOUND: {upper_bound}")
+
+    print (f'AVG LENGTH: {avg_length}')
+    print (f'CUR LENGTH: {cur_length}')
 
     if cur_length > upper_bound:
         diff = cur_length - upper_bound
         return (False, diff)
     
     elif cur_length < lower_bound:
-        diff = lower_bound - cur_length
+        diff = cur_length - lower_bound
         return (False, diff)
 
     return (True, 0)
@@ -156,16 +159,8 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
         else:
             length_explanation = f"This code is too short by about {abs(diff)} and needs to be lengthened."
 
-
-    #define class here with ast, check for structures
     detected_structures = detect_structures(new_text[8:-3])
 
-    #print (f"Detected structures: {detected_structures}")
-    #may not be tracking conditional chains?
-
-    #if any element in selected_structures is False, flag it
-    #if any element in disallowed_structures is True, flag it
-    #print (f"KEY SPECIFICATION DEBUGGING: {specifications['disallowed_structures']}")
     should_include = []
     should_not_include = []
     for key, value in detected_structures.items():
@@ -200,8 +195,12 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
 
         new_code = anthropic_query(general_instructions)
         print ("Code did not meet specifications for the following reasons: ")
-        print (f"Code should have included structures but did not: {should_include}")
-        print (f"Code should not have included structures but did: {should_not_include}")
+        if length_explanation:
+            print (length_explanation)
+        if should_include:
+            print (f"Code should have included structures but did not: {should_include}")
+        if should_not_include:
+            print (f"Code should not have included structures but did: {should_not_include}")        
         return False, new_code
 
     #no issues with the code
@@ -218,6 +217,7 @@ def query_loop(user_selections):
     print ("Sending query to chatgpt...")
     chatgpt_text = chatgpt_query(query)
 
+    #TODO: this should be moved inside of the attempts block.
     #3. check against user selections, get new code if necessary
     print ("Validating code against user selections...")
     code_unmodified, chatgpt_text = validate_against_user_selections(problem_type, specifications, chatgpt_text)
@@ -553,99 +553,99 @@ def get_random_item_in_list(array):
     rand_int = random.randint(0,len(array)-1)
     return array[rand_int]
 
-def query_determine_output(difficultyLevel):
-    """Creates the query for the 'determine_output' problem type."""
-    query = 'I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice reading code. Here are the general specifications: The code must not have any annotations or comments. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. At the end of the code, there should be a line that causes it to output a number or phrase (a student should be able to type its output into a text box for practicing purposes). The output should be limited to 15 characters or fewer, and not more than one line long. It should not be obvious what the code is doing, but it should be decipherable after looking at it for a few minutes. If using for loops, the number of iterations through the most nested for loop should never be more than 5. Please store the output of the code in a variable called \'output\', where the last line prints the output variable. Do not include descriptions of the code. Do not use input() or random() functions in the code.'
+# def query_determine_output(difficultyLevel):
+#     """Creates the query for the 'determine_output' problem type."""
+#     query = 'I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice reading code. Here are the general specifications: The code must not have any annotations or comments. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. At the end of the code, there should be a line that causes it to output a number or phrase (a student should be able to type its output into a text box for practicing purposes). The output should be limited to 15 characters or fewer, and not more than one line long. It should not be obvious what the code is doing, but it should be decipherable after looking at it for a few minutes. If using for loops, the number of iterations through the most nested for loop should never be more than 5. Please store the output of the code in a variable called \'output\', where the last line prints the output variable. Do not include descriptions of the code. Do not use input() or random() functions in the code.'
 
-    subject_query = select_subject("determine_output")
-    print (f"subject: {subject_query}")
-    query += subject_query
+#     subject_query = select_subject("determine_output")
+#     print (f"subject: {subject_query}")
+#     query += subject_query
 
-    #prevent common problems
-    if random.randint(1,10) != 10:
-        restrict_common_queries = " If this subject could feasibly use an example involving dna sequencing, calculating the mean/average, factorials, or population growth, do not make those the main part of the problem."
-        query += restrict_common_queries
+#     #prevent common problems
+#     if random.randint(1,10) != 10:
+#         restrict_common_queries = " If this subject could feasibly use an example involving dna sequencing, calculating the mean/average, factorials, or population growth, do not make those the main part of the problem."
+#         query += restrict_common_queries
     
-    #add some random variance
-    if random.randint(1,10) > 5:
-        adjective_list = "a little,moderately,fairly,sort of,kind of,a bit,a tiny bit,somewhat".split(",")
-        tricky_level = f" Make this problem {get_random_item_in_list(adjective_list)} tricky."
-        query += tricky_level
+#     #add some random variance
+#     if random.randint(1,10) > 5:
+#         adjective_list = "a little,moderately,fairly,sort of,kind of,a bit,a tiny bit,somewhat".split(",")
+#         tricky_level = f" Make this problem {get_random_item_in_list(adjective_list)} tricky."
+#         query += tricky_level
     
-    if difficultyLevel == "Easy":
-        query += ' The code must be between 5 and 10 lines long. Do not use more than one \'for\' loop. Do not use list/dictionary comprehensions. '
+#     if difficultyLevel == "Easy":
+#         query += ' The code must be between 5 and 10 lines long. Do not use more than one \'for\' loop. Do not use list/dictionary comprehensions. '
 
-    elif difficultyLevel == "Medium":
-        query += ' The code must be between 15 and 30 lines long. Please use list comprehensions in place of single-nested \'for\' loops, where applicable.'
+#     elif difficultyLevel == "Medium":
+#         query += ' The code must be between 15 and 30 lines long. Please use list comprehensions in place of single-nested \'for\' loops, where applicable.'
 
-    elif difficultyLevel == "Hard":
-        query += ' The code must be between 50 and 100 lines long. Please use list comprehensions and dictionary comprehensions in place of single-nested forloops, where applicable. '
+#     elif difficultyLevel == "Hard":
+#         query += ' The code must be between 50 and 100 lines long. Please use list comprehensions and dictionary comprehensions in place of single-nested forloops, where applicable. '
 
-    #TODO: if still seeing lack of variety, ask ChatGPT to randomize the code at the end.
-    #randomizer = random.randint(1,3)
-    #query += f"I would also like you to slightly randomize the code. Create the code again with the same constraints, but with small differences. These differences may impact variable names, function names, and the output. Perform this randomization {randomizer} times, and only return the final code block. Do not introduce the code with descriptions, do not show any code other than the final randomized code. "
+#     #TODO: if still seeing lack of variety, ask ChatGPT to randomize the code at the end.
+#     #randomizer = random.randint(1,3)
+#     #query += f"I would also like you to slightly randomize the code. Create the code again with the same constraints, but with small differences. These differences may impact variable names, function names, and the output. Perform this randomization {randomizer} times, and only return the final code block. Do not introduce the code with descriptions, do not show any code other than the final randomized code. "
 
-    #enforce important restrictions variable.
-    query += "Again, \'for\' loops should no more than 5 iterations. Do not use nested \'for\' loops. Lists cannot have more than 5 elements. The output cannot be a dictionary or a set. Please store the output of the code in a variable called \'output\'. The last line of the code must be print(output), with normal closing grave marks."
+#     #enforce important restrictions variable.
+#     query += "Again, \'for\' loops should no more than 5 iterations. Do not use nested \'for\' loops. Lists cannot have more than 5 elements. The output cannot be a dictionary or a set. Please store the output of the code in a variable called \'output\'. The last line of the code must be print(output), with normal closing grave marks."
 
-    return query
+#     return query
 
-def query_fill_in_vars(difficultyLevel):
-    """Creates the query for the 'fill_in_vars' problem type."""
-    #query = 'I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice reading code. Here are the general specifications: The code must not have any annotations, comments, or docstrings. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. At the end of the code, there should be a line that causes it to output a number or phrase (a student should be able to type its output into a text box for practicing purposes). The output should be limited to 50 characters or fewer, and not more than one line long. Please store the output of the code in a variable called \'output\', where the last line prints the output variable. Do not include descriptions of the code.'
+# def query_fill_in_vars(difficultyLevel):
+#     """Creates the query for the 'fill_in_vars' problem type."""
+#     #query = 'I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice reading code. Here are the general specifications: The code must not have any annotations, comments, or docstrings. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. At the end of the code, there should be a line that causes it to output a number or phrase (a student should be able to type its output into a text box for practicing purposes). The output should be limited to 50 characters or fewer, and not more than one line long. Please store the output of the code in a variable called \'output\', where the last line prints the output variable. Do not include descriptions of the code.'
 
-    query = 'I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice reading code. Here are the general specifications: The code must not have any comments or annotations, but it should have docstrings following the PEP8 python styling conventions. Write one docstring for each function and class that contains a short summary, descriptions of parameters, and the function return value (if applicable). Use \"Args\" and \"Returns\" for this. Do not write docstrings for __init__() functions. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. All code must be wrapped in a function or a class.  Do not include descriptions of, or introductions to, the code; just respond with the code.'
+#     query = 'I\'d like you to generate a snippet of Python code for me. The purpose of the code is educational, so it should give students practice reading code. Here are the general specifications: The code must not have any comments or annotations, but it should have docstrings following the PEP8 python styling conventions. Write one docstring for each function and class that contains a short summary, descriptions of parameters, and the function return value (if applicable). Use \"Args\" and \"Returns\" for this. Do not write docstrings for __init__() functions. Variable and function names must make sense (be something a human would write). The code should do something that would be useful to a human. Please use i, j, and k for iterators in for loops. All code must be wrapped in a function or a class.  Do not include descriptions of, or introductions to, the code; just respond with the code.'
 
 
-    #prevent common problems
-    if random.randint(1,10) != 10:
-        restrict_common_queries = " If this subject could feasibly use an example involving dna sequencing, calculating the mean/average, factorials, or population growth, do not make those the main part of the problem."
-        query += restrict_common_queries
+#     #prevent common problems
+#     if random.randint(1,10) != 10:
+#         restrict_common_queries = " If this subject could feasibly use an example involving dna sequencing, calculating the mean/average, factorials, or population growth, do not make those the main part of the problem."
+#         query += restrict_common_queries
     
-    #add some random variance
-    adjective_list = "a little,moderately,fairly,sort of,kind of,a bit,a tiny bit,somewhat".split(",")
-    tricky_level = f" Make this problem {get_random_item_in_list(adjective_list)} tricky."
-    query += tricky_level
+#     #add some random variance
+#     adjective_list = "a little,moderately,fairly,sort of,kind of,a bit,a tiny bit,somewhat".split(",")
+#     tricky_level = f" Make this problem {get_random_item_in_list(adjective_list)} tricky."
+#     query += tricky_level
 
-    #enforce 'output' variable.
-    #query += " Please store the output of the code in a variable called \'output\'. The last line of the code must be print(output), with normal closing grave marks. Do not write a function on a line by itself, all function calls must be placed in variables."
+#     #enforce 'output' variable.
+#     #query += " Please store the output of the code in a variable called \'output\'. The last line of the code must be print(output), with normal closing grave marks. Do not write a function on a line by itself, all function calls must be placed in variables."
 
-    #all code must be in a function, otherwise there's nothing for the user to do
-    #query += " Other than this line, all code must be wrapped in one or more functions. Do not use any wrapper functions. Place test calls to the function at the bottom of the script, before the output variable."
+#     #all code must be in a function, otherwise there's nothing for the user to do
+#     #query += " Other than this line, all code must be wrapped in one or more functions. Do not use any wrapper functions. Place test calls to the function at the bottom of the script, before the output variable."
 
-    #easy vs medium/hard problems have different subjects
-    easy_subjects = "checking if a number (1-10) is divisible by another,listing all divisors of a number,counting the number of divisors,finding the largest or smallest divisor of a number,checking if a number is prime (brute force),listing the first n prime numbers,finding the smallest prime greater than a give number,something involving prime numbers,computing the gcd of a number,computing the lcm using the gcd,checking if two numbers are co-prime,basic modular arithmetic,finding the remainder of a large number,checking if a number is congruent to another modulo n,checking if a number is even or odd,counting the number of even or odd numbers in a range,summing only the even or odd numbers in a list,computing the sum of the digits in a number,finding the digital root,fibonacci sequence,converting a number from decimal to binary,converting a number from binary to decimal,checking if a number is a palindrome,something involving palindromes but not checking them,computing the first n fibonacci numbers,finding the sum of the first n fibonacci numbers,checking if a number if a fibonacci number".split(",")
-    intermediate_subjects = "more complicted modular arithmetic,finding the modular inverse of a number (if it exists),checking if a number has modular inverse,finding the prime factorization of a number,counting the number of distinct prime factors,checking if a number is a product of exactly two primes,checking if a number is a product of exactly n primes (1-5),computing the sum of divisors of a number,checking if a number if perfect,checking if a number is deficient, checking if a number is abundant,something involving perfect numbers,something involving deficient numbers,something involving abundant numbers,converting a number between arbitrary bases,checking if a number is prime in a different base,computing fibonacci numbers using matrix exponentiation,finding the nth term of a gernalized recurrence relation,computing the sum of fibonacci numbers in a given range efficiently,checking if a linear equation has integer solutions,generating all primes up to n efficiently,finding the number of primes in a given range,finding the smallest power of a number that is divisible by a given number,finding the continued fraction representation of a rational number".split(",")
+#     #easy vs medium/hard problems have different subjects
+#     easy_subjects = "checking if a number (1-10) is divisible by another,listing all divisors of a number,counting the number of divisors,finding the largest or smallest divisor of a number,checking if a number is prime (brute force),listing the first n prime numbers,finding the smallest prime greater than a give number,something involving prime numbers,computing the gcd of a number,computing the lcm using the gcd,checking if two numbers are co-prime,basic modular arithmetic,finding the remainder of a large number,checking if a number is congruent to another modulo n,checking if a number is even or odd,counting the number of even or odd numbers in a range,summing only the even or odd numbers in a list,computing the sum of the digits in a number,finding the digital root,fibonacci sequence,converting a number from decimal to binary,converting a number from binary to decimal,checking if a number is a palindrome,something involving palindromes but not checking them,computing the first n fibonacci numbers,finding the sum of the first n fibonacci numbers,checking if a number if a fibonacci number".split(",")
+#     intermediate_subjects = "more complicted modular arithmetic,finding the modular inverse of a number (if it exists),checking if a number has modular inverse,finding the prime factorization of a number,counting the number of distinct prime factors,checking if a number is a product of exactly two primes,checking if a number is a product of exactly n primes (1-5),computing the sum of divisors of a number,checking if a number if perfect,checking if a number is deficient, checking if a number is abundant,something involving perfect numbers,something involving deficient numbers,something involving abundant numbers,converting a number between arbitrary bases,checking if a number is prime in a different base,computing fibonacci numbers using matrix exponentiation,finding the nth term of a gernalized recurrence relation,computing the sum of fibonacci numbers in a given range efficiently,checking if a linear equation has integer solutions,generating all primes up to n efficiently,finding the number of primes in a given range,finding the smallest power of a number that is divisible by a given number,finding the continued fraction representation of a rational number".split(",")
 
-    #old code: Additionally, pick two variables at random and call them "unknown1" or something similar. Do not pick variables that simply rename other variables, or are just temporary variables.
-    if difficultyLevel == "Easy":
-        #subjects = easy_subjects
-        query += ' The code must be between 10 and 15 lines long. Do not use more than one \'for\' loop. Do not use list/dictionary comprehensions.'
+#     #old code: Additionally, pick two variables at random and call them "unknown1" or something similar. Do not pick variables that simply rename other variables, or are just temporary variables.
+#     if difficultyLevel == "Easy":
+#         #subjects = easy_subjects
+#         query += ' The code must be between 10 and 15 lines long. Do not use more than one \'for\' loop. Do not use list/dictionary comprehensions.'
 
-    elif difficultyLevel == "Medium":
-        #subjects = intermediate_subjects
-        query += ' The code must be between 20 and 45 lines long and contain at least 2 functions. Please use list comprehensions in place of single-nested forloops, where applicable. All function names must be called "mystery1", or something similar, so students will not know what they do from name alone.'
+#     elif difficultyLevel == "Medium":
+#         #subjects = intermediate_subjects
+#         query += ' The code must be between 20 and 45 lines long and contain at least 2 functions. Please use list comprehensions in place of single-nested forloops, where applicable. All function names must be called "mystery1", or something similar, so students will not know what they do from name alone.'
 
-    elif difficultyLevel == "Hard":
-        #subjects = easy_subjects + intermediate_subjects
-        mod_list = ["and contain one very long function",
-                    "and contain at least two functions, both moderately long",
-                    "and contain at least three functions"]
-        mod = mod_list[random.randint(0,len(mod_list)-1)]
-        print (mod)
-        query += f' The code must be between 50 and 100 lines long {mod}. Make the code more complicated if needed to reach 50 lines. Make this example moderately tricky. Please use list comprehensions and dictionary comprehensions in place of single-nested forloops, where applicable. All function names must be called "mystery1", or something similar, so students will not know what they do from name alone.'
+#     elif difficultyLevel == "Hard":
+#         #subjects = easy_subjects + intermediate_subjects
+#         mod_list = ["and contain one very long function",
+#                     "and contain at least two functions, both moderately long",
+#                     "and contain at least three functions"]
+#         mod = mod_list[random.randint(0,len(mod_list)-1)]
+#         print (mod)
+#         query += f' The code must be between 50 and 100 lines long {mod}. Make the code more complicated if needed to reach 50 lines. Make this example moderately tricky. Please use list comprehensions and dictionary comprehensions in place of single-nested forloops, where applicable. All function names must be called "mystery1", or something similar, so students will not know what they do from name alone.'
 
-    query += select_subject("determine_output", 50, 25, 25)
+#     query += select_subject("determine_output", 50, 25, 25)
 
-    # chosen_subject = subjects[random.randint(0,len(subjects)-1)]
-    # query += f" Please use an example related to {chosen_subject}. Feel free to make a more granular problem if applicable."
+#     # chosen_subject = subjects[random.randint(0,len(subjects)-1)]
+#     # query += f" Please use an example related to {chosen_subject}. Feel free to make a more granular problem if applicable."
 
 
-    #query += " Please store the output of the code in a variable called \'output\'. The last line of the code must be print(output), with normal closing grave marks."
+#     #query += " Please store the output of the code in a variable called \'output\'. The last line of the code must be print(output), with normal closing grave marks."
 
-    #query += " Other than this line, all code must be wrapped in one or more functions."
+#     #query += " Other than this line, all code must be wrapped in one or more functions."
 
-    return query
+#     return query
 
 def get_query(user_selections):
     specifications = {}
@@ -653,7 +653,7 @@ def get_query(user_selections):
     problem_types = ["determine_output", "fill_in_vars", "drag_and_drop",]
     problem_type = problem_types[random.randint(0, len(problem_types)-1)]
 
-    problem_type = "drag_and_drop"
+    problem_type = "determine_output"
     required_structures, disallowed_structures, specifications = process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications)
     subject_request = process_user_selections_subjects(user_selections)
     required_length, specifications = process_user_selections_problem_length(user_selections, specifications)
