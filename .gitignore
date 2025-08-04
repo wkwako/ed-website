@@ -1,8 +1,0 @@
-__pycache__/
-*.pyc
-.env
-.vscode/
-db.sqlite3
-secret_key.txt
-anthropic_key.txt
-settings.py
