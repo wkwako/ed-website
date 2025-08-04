@@ -747,6 +747,24 @@ def process_user_selections_subjects(user_selections):
 
     return f" Generate code from the domain of {chosen_domain_readable} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
 
+def check_for_no_subjects(user_selections):
+    num_structures = 7
+
+    #gets a list of truthy values in user_selections['checkbox_states']
+    values = [value for key,value in user_selections['checkbox_states'].items()]
+    values = values[num_structures:]
+    if any(values):
+        return user_selections
+    
+    #they are all false. flip them all to true
+    count = 0
+    for key, value in user_selections['checkbox_states'].items():
+        if count > num_structures:
+            user_selections['checkbox_states'][key] = True
+        count += 1
+
+    return user_selections
+
 def process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications):
     num_structures = 7
 

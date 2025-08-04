@@ -47,8 +47,13 @@ def practice(request):
             #print (difficultyLevel)
 
             user_selections = body.get('user_selections', None)
-            #TODO: user_selections is populated correctly, but specifications is not when the difficulty > 1. check this first.
-            #print (f"USER_SELECTIONS: {user_selections}")
+            print (f"USER_SELECTIONS: {user_selections}")
+
+            user_selections = utilities.check_for_no_subjects(user_selections)
+            print (f"USER_SELECTIONS: {user_selections}")
+
+
+
 
 
             #problem_type,query = utilities.get_query(difficultyLevel, user_selections)
