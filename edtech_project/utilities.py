@@ -17,7 +17,6 @@ import copy
 from . import static_variables
 from contextlib import redirect_stdout
 
-
 #START CODE FROM CHATGPT
 def detect_structures(code: str):
     class StructureVisitor(ast.NodeVisitor):
