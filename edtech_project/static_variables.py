@@ -50,7 +50,41 @@ instructions = {"base_query": "I\'d like you to generate a snippet of Python cod
                                                     "Do not include descriptions of, or introductions to, the code. Just respond with the code.",
                                                     "Do not write docstrings for __init__() functions.",
                                                     ],
-                }
+                },
+                "determine_output": {"do": ["Use i, j, and k for iterators in \"for\" loops.",
+                                            "Store the output of the code in a variable called \"output\", where the last line prints the output variable.",
+                                            "The number of iterations through the most nested for loop should never be more than 5 (if using for loops).",
+                                            "The output should be limited to 10 characters or fewer, and not more than one line long. The output must be something the user can type into a text box (not contain weird characters or symbols).",
+                                            "The output of the code must be easy to determine with mental math."
+                                            ],
+                                     "do-not": ["Do not include descriptions of the code.",
+                                                "Do not use input() or random() functions in the code.",
+                                                "Do not include descriptions of, or introductions to, the code. Just respond with the code.",
+                                                "Do not include comments, annotations, or docstrings in the code."
+                                                ],
+                },
+                "fill_in_vars": {"do": ["Use i, j, and k for iterators in for loops.",
+                                        "The code should have docstrings following the PEP8 Python styling conventions. Write one docstring for each function and class that contains a short summary, descriptions of parameters, and the function return value (if applicable). Use \"Args\" and \"Returns\" for this.",
+                                        "All code must be wrapped in a function or a class."
+                                                ],
+                                 "do-not": ["Do not write any annotations for the code.",
+                                            "Do not include descriptions of, or introductions to, the code. Just respond with the code.",
+                                             "Do not write docstrings for __init__() functions.",
+                                           ],
+                },
+                "drag_and_drop": {"do": ["Use i, j, and k for iterators in \"for\" loops.",
+                                         "Store the output of the code in a variable called \"output\", where the last line prints the output variable.",
+                                         "The number of iterations through the most nested for loop should never be more than 5 (if using for loops).",
+                                         "The output should be limited to 10 characters or fewer, and not more than one line long. The output must be something the user can type into a text box (not contain weird characters or symbols).",
+                                         "The output of the code must be easy to determine with mental math."
+                                         "Most code should be wrapped in functions, but that \"output\" variable must be outside functions and still print something at the end."
+                                        ],
+                                  "do-not": ["Do not include descriptions of the code.",
+                                             "Do not use input() or random() functions in the code.",
+                                             "Do not include descriptions of, or introductions to, the code. Just respond with the code.",
+                                             "Do not include comments, annotations, or docstrings in the code."
+                                            ],
+                },
 
                 
 }

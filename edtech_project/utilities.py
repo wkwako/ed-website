@@ -653,17 +653,20 @@ def get_query(user_selections):
     problem_types = ["determine_output", "fill_in_vars", "drag_and_drop",]
     problem_type = problem_types[random.randint(0, len(problem_types)-1)]
 
-    problem_type = "fill_in_vars"
+    problem_type = "drag_and_drop"
     required_structures, disallowed_structures, specifications = process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications)
     subject_request = process_user_selections_subjects(user_selections)
     required_length, specifications = process_user_selections_problem_length(user_selections, specifications)
 
-    if problem_type in ["determine_output", "drag_and_drop"]:
-        must_do = "-" + "\n-".join(static_variables.instructions["code_mode_output"]["do"]) + "\n"
-        must_not_do = "-" + "\n-".join(static_variables.instructions["code_mode_output"]["do-not"]) + "\n"
-    elif problem_type in ["fill_in_vars"]:
-        must_do = "-" + "\n-".join(static_variables.instructions["code_mode_completion"]["do"]) + "\n"
-        must_not_do = "-" + "\n-".join(static_variables.instructions["code_mode_completion"]["do-not"]) + "\n"
+    must_do = "-" + "\n-".join(static_variables.instructions[problem_type]["do"]) + "\n"
+    must_not_do = "-" + "\n-".join(static_variables.instructions[problem_type]["do-not"]) + "\n"
+
+    # if problem_type in ["determine_output", "drag_and_drop"]:
+    #     must_do = "-" + "\n-".join(static_variables.instructions["code_mode_output"]["do"]) + "\n"
+    #     must_not_do = "-" + "\n-".join(static_variables.instructions["code_mode_output"]["do-not"]) + "\n"
+    # elif problem_type in ["fill_in_vars"]:
+    #     must_do = "-" + "\n-".join(static_variables.instructions["code_mode_completion"]["do"]) + "\n"
+    #     must_not_do = "-" + "\n-".join(static_variables.instructions["code_mode_completion"]["do-not"]) + "\n"
 
     constraints = " All of the requirements on this list must be met: \n" + must_do + required_structures + must_not_do + "-" + disallowed_structures
     full_query = static_variables.instructions["base_query"] + constraints + "\n-" + subject_request + "\n-" + required_length
@@ -680,28 +683,28 @@ def get_query(user_selections):
 
 
 
-def get_query_old(difficultyLevel) -> tuple[str, str]:
-    """Given the difficultyLevel, randomizes the kind of problem received and returns its query.
-       Returns a tuple[str,str], where the first string is the problem type and the second is the query."""
-    problem_int = random.randint(2,2) #determines which problems will be generated
-    problem_type = ""
-    query = ""
+# def get_query_old(difficultyLevel) -> tuple[str, str]:
+#     """Given the difficultyLevel, randomizes the kind of problem received and returns its query.
+#        Returns a tuple[str,str], where the first string is the problem type and the second is the query."""
+#     problem_int = random.randint(2,2) #determines which problems will be generated
+#     problem_type = ""
+#     query = ""
 
-    #subject, constraints = process_user_selections(user_selections)
+#     #subject, constraints = process_user_selections(user_selections)
 
-    if problem_int == 1:
-        problem_type = "determine_output" #standard problem
-        query = query_determine_output(difficultyLevel)
-    elif problem_int == 2:
-        problem_type = "fill_in_vars" #text is editable, rename function/variable names
-        query = query_fill_in_vars(difficultyLevel)
-    elif problem_int == 3:
-        problem_type = "drag_and_drop" #re-arrange lines of code
-        query = query_determine_output(difficultyLevel)
-    elif problem_int == 4:
-        problem_type = "fix_incorrect_code" #correct errors in code
+#     if problem_int == 1:
+#         problem_type = "determine_output" #standard problem
+#         query = query_determine_output(difficultyLevel)
+#     elif problem_int == 2:
+#         problem_type = "fill_in_vars" #text is editable, rename function/variable names
+#         query = query_fill_in_vars(difficultyLevel)
+#     elif problem_int == 3:
+#         problem_type = "drag_and_drop" #re-arrange lines of code
+#         query = query_determine_output(difficultyLevel)
+#     elif problem_int == 4:
+#         problem_type = "fix_incorrect_code" #correct errors in code
 
-    return problem_type, query
+#     return problem_type, query
 
 def process_user_selections_subjects(user_selections):
     num_structures = 7
