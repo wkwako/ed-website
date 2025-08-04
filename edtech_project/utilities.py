@@ -122,8 +122,8 @@ def get_length_specifications(avg_length, cur_length):
     upper_bound = avg_length + tolerance
     lower_bound = avg_length - tolerance
 
-    print (f'AVG LENGTH: {avg_length}')
-    print (f'CUR LENGTH: {cur_length}')
+    #print (f'AVG LENGTH: {avg_length}')
+    #print (f'CUR LENGTH: {cur_length}')
 
     if cur_length > upper_bound:
         diff = cur_length - upper_bound
@@ -147,7 +147,6 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
     
 
     #check length specs
-    print ("GETTING LENGTH SPECIFICATIONS")
     avg_length = int((specifications["required_length"][0] + specifications["required_length"][1])/2)
     meets_length_specs, diff = get_length_specifications(avg_length, len(new_text.split("\n")))
     length_explanation = ""
@@ -161,12 +160,12 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
     #define class here with ast, check for structures
     detected_structures = detect_structures(new_text[8:-3])
 
-    print (f"Detected structures: {detected_structures}")
+    #print (f"Detected structures: {detected_structures}")
     #may not be tracking conditional chains?
 
     #if any element in selected_structures is False, flag it
     #if any element in disallowed_structures is True, flag it
-    print (f"KEY SPECIFICATION DEBUGGING: {specifications['disallowed_structures']}")
+    #print (f"KEY SPECIFICATION DEBUGGING: {specifications['disallowed_structures']}")
     should_include = []
     should_not_include = []
     for key, value in detected_structures.items():
@@ -212,14 +211,15 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
 def query_loop(user_selections):
     result = True
     #1. get query
-    print ("GETTING ORIGINAL QUERY")
+    print ("Getting first query...")
     problem_type, query, specifications = get_query(user_selections)
 
     #2. send query to chatgpt
+    print ("Sending query to chatgpt...")
     chatgpt_text = chatgpt_query(query)
 
     #3. check against user selections, get new code if necessary
-    print ("VALIDATING CODE AGAINST USER SELECTIONS")
+    print ("Validating code against user selections...")
     code_unmodified, chatgpt_text = validate_against_user_selections(problem_type, specifications, chatgpt_text)
 
     fixed_code = copy.deepcopy(chatgpt_text)
@@ -227,18 +227,18 @@ def query_loop(user_selections):
     correct_answer = None
     attempts = 0
     success = False
-    print ("STARTING LOOP")
+    print ("Starting verification loop...")
     while attempts < 3 and not success:
         #4. run through safety checks and confirm code runs
         code_is_good, correct_answer = validate(fixed_code)
 
         #no issues
         if code_is_good:
-            print ("CODE IS VALID")
+            print ("Code is valid, returning...")
             break
 
         #5. code did not run, send to anthropic and ask for a fix
-        print ("CODE DID NOT RUN, SENDING TO ANTHROPIC WITH INSTRUCTIONS")
+        print ("Code did not run, sending to anthropic for fix...")
         code_fix_query = f"There is an issue with this Python code, it is not running: \n {fixed_code}.\nCould you fix the error? Change only as much as you need to in order to fix the error. If there are 'while True' loops, please remove those as well. Do not add any comments or annotations to the code that do not already exist. Just reply with the code, do not introduce it or explain the fixes."
         fixed_code = anthropic_query(code_fix_query)
         
@@ -653,7 +653,7 @@ def get_query(user_selections):
     problem_types = ["determine_output", "fill_in_vars", "drag_and_drop",]
     problem_type = problem_types[random.randint(0, len(problem_types)-1)]
 
-    problem_type = "drag_and_drop"
+    problem_type = "fill_in_vars"
     required_structures, disallowed_structures, specifications = process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications)
     subject_request = process_user_selections_subjects(user_selections)
     required_length, specifications = process_user_selections_problem_length(user_selections, specifications)
@@ -673,7 +673,6 @@ def get_query(user_selections):
 
     print (f"problem type: {problem_type}")
     print (f"subject: {subject_request}")
-    print (f"problem length: {required_length}")
     print (f"required structures: {required_structures}")
     print (f"disallowed structures: {disallowed_structures}")
 
@@ -743,7 +742,7 @@ def process_user_selections_subjects(user_selections):
             selection = chosen_concept
         else:
             selection = chosen_q_type
-        return f" Generate code from the domain of {chosen_domain_readable} related to {chosen_subject}."
+        return f" Generate code from the domain of {chosen_domain_readable} related to {selection}."
 
     return f" Generate code from the domain of {chosen_domain_readable} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
 

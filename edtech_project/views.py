@@ -53,9 +53,6 @@ def practice(request):
             print (f"USER_SELECTIONS: {user_selections}")
 
 
-
-
-
             #problem_type,query = utilities.get_query(difficultyLevel, user_selections)
             #problem_type, query, specifications = utilities.get_query(user_selections)
             #print (f'FULL QUERY: {query}')

@@ -71,7 +71,7 @@ window.addEventListener('DOMContentLoaded', () => {
         selectedSubjects = ['computer-science', 'math'];
     }
 
-    // Warning element
+    // ----- no subject warning logic -----
     const warningElement = document.getElementById('no-subjects-warning');
     warningElement.style.display = 'none';
 
