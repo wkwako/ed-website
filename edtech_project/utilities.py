@@ -534,17 +534,17 @@ def store_in_db(request, current_user, problem_text, is_user_correct, problem_ty
 def normalize_match(match):
     original = match.group()
     
-    # If the number contains a decimal point, handle rounding
     if '.' in original:
         num = round(float(original), 3)
         return str(num)
     
-    # If it's an integer without a decimal, preserve leading zeros
-    return original
+    return original  # preserve leading zeros for integers
 
 def normalize_output_answer(answer):
-    """Extracts all numbers, rounds decimals to 3 digits, and preserves leading zeros for integers."""
-    return re.sub(r'[-+]?\d*\.?\d+', normalize_match, answer)
+    """Extracts all numbers, rounds decimals to 3 digits, preserves leading zeros for integers,
+    and removes newlines."""
+    normalized = re.sub(r'[-+]?\d*\.?\d+', normalize_match, answer)
+    return normalized.replace('\n', '')
 #END CODE FROM CHATGPT
 
 def get_random_item_in_list(array):

@@ -47,10 +47,9 @@ def practice(request):
             #print (difficultyLevel)
 
             user_selections = body.get('user_selections', None)
-            print (f"USER_SELECTIONS: {user_selections}")
 
             user_selections = utilities.check_for_no_subjects(user_selections)
-            print (f"USER_SELECTIONS: {user_selections}")
+            #print (f"USER_SELECTIONS: {user_selections}")
 
 
             #problem_type,query = utilities.get_query(difficultyLevel, user_selections)
@@ -68,13 +67,15 @@ def practice(request):
 
             #code_unmodified, chatgpt_text = utilities.validate_against_user_selections(problem_type, specifications, chatgpt_text)
 
-            print ("STARTING QUERY LOOP")
+            print ("Starting query loop...")
             result, problem_type, output, chatgpt_text = utilities.query_loop(user_selections)
-            print ("ENDING QUERY LOOP")
+            print ("Ending query loop...")
 
             if chatgpt_text[-3:] != "```":
                 chatgpt_text += "```"
 
+
+            request.session["problem_text"] = chatgpt_text
 
             unmixed_lines = ""
 
@@ -175,11 +176,18 @@ def check_answer(request):
         problem_type = data.get("problem_type", "")
         #print (f"problem type for model is: {problem_type}")
 
+        print (f"USER INPUT: {user_input}")
+        print (type(user_input))
+        print (f"CORRECT ANSWER: {correct_answer}")
+        print (type(correct_answer))
+
         #correct_answer is None. something has gone terribly wrong
         if not correct_answer:
             return JsonResponse({"success": False, "error": "Answer is None. Start debugging in utilities.validate_and_query()"}, status=400)
         
         is_user_correct = user_input == correct_answer
+
+        print (is_user_correct)
 
         #prepare to store data in db
         current_user = request.user
