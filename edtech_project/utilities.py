@@ -744,8 +744,10 @@ def process_user_selections_subjects(user_selections):
             selection = chosen_concept
         else:
             selection = chosen_q_type
+        print (f"Chosen subject: {chosen_domain_readable} related to {selection}.")
         return f" Generate code from the domain of {chosen_domain_readable} related to {selection}."
 
+    print (f"Chosen subject: {chosen_domain_readable} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}.")
     return f" Generate code from the domain of {chosen_domain_readable} related to {chosen_subject} involving {chosen_concept} and {chosen_q_type}."
 
 def check_for_no_subjects(user_selections):

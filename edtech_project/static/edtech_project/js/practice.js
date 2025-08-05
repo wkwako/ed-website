@@ -514,7 +514,7 @@ function submitUserAnswer() {
             submitSkeleton.style.display = 'inline-block';
             loaderShown = true;
         }
-    }, 200);
+    }, 400);
 
     let url = "";
     let data = {
