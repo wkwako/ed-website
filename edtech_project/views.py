@@ -69,7 +69,14 @@ def practice(request):
 
             print ("Starting query loop...")
             result, problem_type, output, chatgpt_text = utilities.query_loop(user_selections)
-            print ("Ending query loop...")
+            #result = False
+            print (f"Ending query loop... result was {result}")
+
+            if not result:
+                return JsonResponse({
+                "chatgpt_response": "Attempts exceeded.",
+                "problem_type": problem_type,
+                })
 
             if chatgpt_text[-3:] != "```":
                 chatgpt_text += "```"
@@ -111,26 +118,26 @@ def practice(request):
                 chatgpt_text = utilities.mix_lines(chatgpt_text)
 
             #code is valid
-            if result:
-                if problem_type != "fill_in_vars":
-                    print (f'previous correct answer: {output}')
-                    output = utilities.normalize_output_answer(output)
-                    print (f'normalized correct answer: {output}')
-                    request.session["correct_answer"] = output
+            #if result:
+            if problem_type != "fill_in_vars":
+                print (f'previous correct answer: {output}')
+                output = utilities.normalize_output_answer(output)
+                print (f'normalized correct answer: {output}')
+                request.session["correct_answer"] = output
 
-                #print (f'SENDING BACK CORRECT ANSWER AS: {output}')
-                return JsonResponse({
-                    "chatgpt_response": chatgpt_text,
-                    "problem_type": problem_type,
-                    "correct_answer": output,
-                    "unmixed_lines": unmixed_lines,
-                    })
-            
-            #code is not valid
+            #print (f'SENDING BACK CORRECT ANSWER AS: {output}')
             return JsonResponse({
-                "chatgpt_response": "Attempts exceeded.",
-                "problem_type": "Attempts exceeded.",
+                "chatgpt_response": chatgpt_text,
+                "problem_type": problem_type,
+                "correct_answer": output,
+                "unmixed_lines": unmixed_lines,
                 })
+            
+            # #code is not valid
+            # return JsonResponse({
+            #     "chatgpt_response": "Attempts exceeded.",
+            #     "problem_type": "Attempts exceeded.",
+            #     })
             
         #something has gone terribly wrong
         except Exception as exception:
@@ -174,12 +181,6 @@ def check_answer(request):
         user_input = data.get("user_input", None).strip()
         correct_answer = request.session.get("correct_answer")
         problem_type = data.get("problem_type", "")
-        #print (f"problem type for model is: {problem_type}")
-
-        print (f"USER INPUT: {user_input}")
-        print (type(user_input))
-        print (f"CORRECT ANSWER: {correct_answer}")
-        print (type(correct_answer))
 
         #correct_answer is None. something has gone terribly wrong
         if not correct_answer:

@@ -108,7 +108,7 @@ def detect_structures(code: str):
     return visitor.found
 #END CODE FROM CHATGPT
 
-def get_length_specifications(avg_length, cur_length):
+def get_length_specifications(problem_type, avg_length, cur_length):
     if avg_length <= 20:
         tolerance = 6
     elif avg_length <= 50:
@@ -121,11 +121,15 @@ def get_length_specifications(avg_length, cur_length):
     upper_bound = avg_length + tolerance
     lower_bound = avg_length - tolerance
 
-    print (f"LOWER BOUND: {lower_bound}")
-    print (f"UPPER BOUND: {upper_bound}")
+    if problem_type == "determine_output":
+        upper_bound = 20
+        lower_bound = 2
 
-    print (f'AVG LENGTH: {avg_length}')
-    print (f'CUR LENGTH: {cur_length}')
+    # print (f"LOWER BOUND: {lower_bound}")
+    # print (f"UPPER BOUND: {upper_bound}")
+
+    # print (f'AVG LENGTH: {avg_length}')
+    # print (f'CUR LENGTH: {cur_length}')
 
     if cur_length > upper_bound:
         diff = cur_length - upper_bound
@@ -150,7 +154,7 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
 
     #check length specs
     avg_length = int((specifications["required_length"][0] + specifications["required_length"][1])/2)
-    meets_length_specs, diff = get_length_specifications(avg_length, len(new_text.split("\n")))
+    meets_length_specs, diff = get_length_specifications(problem_type, avg_length, len(new_text.split("\n")))
     length_explanation = ""
     if not meets_length_specs:
         if diff > 0:
@@ -175,7 +179,7 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
         if should_include:
             structure_explanation += f" I need you to add these structures: {', '.join(should_include)}."
         if should_not_include:
-            structure_explanation += f" I need you to remove this structures: {', '.join(should_not_include)}."
+            structure_explanation += f" I need you to remove these structures: {', '.join(should_not_include)}."
 
         structure_explanation += " All other structures should remain untouched."
 
@@ -216,39 +220,40 @@ def query_loop(user_selections):
     print ("Sending query to chatgpt...")
     chatgpt_text = chatgpt_query(query)
 
-    #TODO: this should be moved inside of the attempts block.
     #3. check against user selections, get new code if necessary
-    print ("Validating code against user selections...")
-    code_unmodified, chatgpt_text = validate_against_user_selections(problem_type, specifications, chatgpt_text)
+    # print ("Validating code against user selections...")
+    # code_unmodified, chatgpt_text = validate_against_user_selections(problem_type, specifications, chatgpt_text)
 
-    fixed_code = copy.deepcopy(chatgpt_text)
-    
     correct_answer = None
     attempts = 0
-    success = False
     print ("Starting verification loop...")
-    while attempts < 3 and not success:
+    max_attempts = 4
+    while attempts < max_attempts:
+
+        print ("Validating code against user selections...")
+        code_unmodified, chatgpt_text = validate_against_user_selections(problem_type, specifications, chatgpt_text)
+
         #4. run through safety checks and confirm code runs
-        code_is_good, correct_answer = validate(fixed_code)
+        code_is_good, correct_answer, err_msg = validate(chatgpt_text)
 
         #no issues
-        if code_is_good:
+        if code_is_good and code_unmodified:
             print ("Code is valid, returning...")
             break
 
         #5. code did not run, send to anthropic and ask for a fix
-        print ("Code did not run, sending to anthropic for fix...")
-        code_fix_query = f"There is an issue with this Python code, it is not running: \n {fixed_code}.\nCould you fix the error? Change only as much as you need to in order to fix the error. If there are 'while True' loops, please remove those as well. Do not add any comments or annotations to the code that do not already exist. Just reply with the code, do not introduce it or explain the fixes."
-        fixed_code = anthropic_query(code_fix_query)
-        
+        if not code_is_good:
+            print ("Exception in code, sending to anthropic for fix...")
+            code_fix_query = f"There is an issue with this Python code: \n {chatgpt_text}.\n It is throwing this error: {err_msg}. Could you fix the error? Change only as much as you need to in order to fix the error. Do not add any comments or annotations to the code that do not already exist. Just reply with the code, do not introduce it or explain the fixes."
+            chatgpt_text = anthropic_query(code_fix_query)
+       
         #increment attempts
         attempts += 1
 
-    if attempts >= 3:
+    if attempts >= max_attempts:
         result = False
 
-
-    return result, problem_type, correct_answer, fixed_code
+    return result, problem_type, correct_answer, chatgpt_text
 
 def validate_safety_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
     """Queries ChatGPT, then validates the result. Output is a tuple of the form (bool, str, str, str), which maps to
@@ -429,7 +434,8 @@ def validate(text_query) -> tuple[bool, str]:
         if isinstance(node, ast.While) and isinstance(node.test, ast.Constant) and node.test.value is True:
         #END CODE FROM 'python_user' on stackoverflow: https://stackoverflow.com/questions/67230018/python-checking-its-own-code-before-running-usage-errors
             print ("infinite loop")
-            return False, ""
+            err_msg = "infinite loop detected"
+            return False, "", "Exception: " + err_msg
 
     try:        
         local_vars = {}
@@ -449,13 +455,13 @@ def validate(text_query) -> tuple[bool, str]:
         if type(output) != str:
             output = str(output)
 
-        return True, output
+        return True, output, ""
 
     except Exception as exception:
         #error was found, return false
         err_msg = str(exception)
         print (f"error in code. exception: {err_msg}")
-        return False, ""
+        return False, "", "Exception: " + err_msg
 
 
 def lines_to_exclude(lines_list):

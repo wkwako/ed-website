@@ -229,8 +229,8 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
 
         //response is not okay, throw an error
         if (!response.ok) {
-            throw new Error(`HTTP error! Status: ${response.status}`);
             chatResponseDiv.innerHTML = "An error has occurred. Please try again or contact the administrator."
+            throw new Error(`HTTP error! Status: ${response.status}`);
         }
         
         return response.json();
@@ -247,7 +247,6 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
 
         //START CODE FROM CHATGPT
         let existingSortable = document.getElementById("sortable-code-block");
-        //console.log("existingSortable:", existingSortable);
         if (existingSortable) {
             const sortableInstance = Sortable.get(existingSortable);
             console.log("sortableInstance:", sortableInstance);
@@ -269,6 +268,13 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
 
         //we received data from chatgpt
         if (data.chatgpt_response) {
+
+            if (data.chatgpt_response === "Attempts exceeded.") {
+                return Promise.reject({ type: "attempts", message: "Attempts exceeded." });
+            }
+            
+
+
             document.getElementById("problem-type").value = data.problem_type;
             document.getElementById("correct-answer").value = data.correct_answer;
             chatResponseDiv.classList.remove("highlight-drag-and-drop");
@@ -471,22 +477,42 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
     //START CODE FROM CHATGPT
     //there was an error retreiving data
     .catch(error => {
-
-        //set isFetching to false so we can try again
-        isFetching = false;
-        if (retries > 0) {
-        // Retry with exponential backoff
-        console.log(`Retrying... Attempts left: ${retries}`);
-        setTimeout(() => {
-            fetchChatGPTResponse(retries - 1, delay * 2); // Increase delay for next attempt
-        }, delay);
-
-        } else {
+        if (error.type === "attempts") {
+            userSubmit.style.display = "none";
+            hintsGroup.style.display = "none";
+            userInputDiv.style.display = "none";
+            whyButton.style.display = "none";
+            explanation.style.display = "none";
             skeletonLoader.style.display = "none";
-            // Show error message after max retries are reached
-            console.error('Request failed after multiple attempts. ', error);
-            document.getElementById('chatgpt-response').innerHTML = '<p style="color: red;">Failed to fetch response from ChatGPT after several attempts.</p>';
+            document.getElementById('chatgpt-response').innerHTML = '<p style="color: red;">Attempts exceeded; failed to generate a problem that met user specifications.</p>';
         }
+
+        else {
+
+            //set isFetching to false so we can try again
+            isFetching = false;
+            if (retries > 0) {
+            // Retry with exponential backoff
+            console.log(`Retrying... Attempts left: ${retries}`);
+            setTimeout(() => {
+                fetchChatGPTResponse(retries - 1, delay * 2); // Increase delay for next attempt
+            }, delay);
+
+            } else {
+                skeletonLoader.style.display = "none";
+                userSubmit.style.display = "none";
+                hintsGroup.style.display = "none";
+                userInputDiv.style.display = "none";
+                whyButton.style.display = "none";
+                explanation.style.display = "none";
+                skeletonLoader.style.display = "none";
+                // Show error message after max retries are reached
+                console.error('Request failed after multiple attempts. ', error);
+                document.getElementById('chatgpt-response').innerHTML = '<p style="color: red;">Failed to fetch response from ChatGPT after several attempts.</p>';
+            }
+        }
+
+        
     });
     //END CODE FROM CHATGPT
 }
