@@ -24,8 +24,8 @@ def detect_structures(code: str):
             self.found = {
                 "enumerate": False,
                 "zip": False,
-                "any/all": False,
-                "map/filter": False,
+                "any-all": False,
+                "map-filter": False,
                 "set-operations": False,
                 "data-slicing": False,
                 "conditional-chaining": False,
@@ -33,8 +33,11 @@ def detect_structures(code: str):
                 "lambda-functions": False,
                 "args-and-kwargs": False,
                 "nested for loops": False,
+                "for loops": False,
+                "while loops": False,
             }
             self.loop_depth = 0
+            self.while_loop_depth = 0
 
         def visit_Call(self, node):
             # enumerate
@@ -93,10 +96,15 @@ def detect_structures(code: str):
 
         def visit_For(self, node):
             self.loop_depth += 1
+            self.found["for loops"] = True
             if self.loop_depth >= 2:  # means we’re inside a nested for
                 self.found["nested for loops"] = True
             self.generic_visit(node)
             self.loop_depth -= 1
+
+        def visit_While(self, node):
+            self.while_loop_depth += 1
+            self.found["while loops"] = True
 
     try:
         tree = ast.parse(code)
@@ -108,7 +116,7 @@ def detect_structures(code: str):
     return visitor.found
 #END CODE FROM CHATGPT
 
-def get_length_specifications(problem_type, avg_length, cur_length):
+def check_length_specifications(problem_type, avg_length, cur_length):
     if avg_length <= 20:
         tolerance = 6
     elif avg_length <= 50:
@@ -122,7 +130,7 @@ def get_length_specifications(problem_type, avg_length, cur_length):
     lower_bound = avg_length - tolerance
 
     if problem_type == "determine_output":
-        upper_bound = 20
+        upper_bound = 25
         lower_bound = 2
 
     # print (f"LOWER BOUND: {lower_bound}")
@@ -150,11 +158,10 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
             start = indices[i-1]
             end = indices[i]
             new_text = new_text[:start+3] + ' ' + new_text[end:]
-    
 
     #check length specs
     avg_length = int((specifications["required_length"][0] + specifications["required_length"][1])/2)
-    meets_length_specs, diff = get_length_specifications(problem_type, avg_length, len(new_text.split("\n")))
+    meets_length_specs, diff = check_length_specifications(problem_type, avg_length, len(new_text.split("\n")))
     length_explanation = ""
     if not meets_length_specs:
         if diff > 0:
@@ -215,6 +222,7 @@ def query_loop(user_selections):
     #1. get query
     print ("Getting first query...")
     problem_type, query, specifications = get_query(user_selections)
+    #print (f"Full query: {query}")
 
     #2. send query to chatgpt
     print ("Sending query to chatgpt...")
@@ -440,11 +448,6 @@ def validate(text_query) -> tuple[bool, str]:
     try:        
         local_vars = {}
 
-        #we trust the input and users don't have access to query chatgpt, this is safe
-        # exec(text_query, local_vars, local_vars)
-
-        # output = local_vars['output']
-
         f = StringIO()
         with redirect_stdout(f):
             local_vars = {}
@@ -586,7 +589,6 @@ def get_random_item_in_list(array):
 #     elif difficultyLevel == "Hard":
 #         query += ' The code must be between 50 and 100 lines long. Please use list comprehensions and dictionary comprehensions in place of single-nested forloops, where applicable. '
 
-#     #TODO: if still seeing lack of variety, ask ChatGPT to randomize the code at the end.
 #     #randomizer = random.randint(1,3)
 #     #query += f"I would also like you to slightly randomize the code. Create the code again with the same constraints, but with small differences. These differences may impact variable names, function names, and the output. Perform this randomization {randomizer} times, and only return the final code block. Do not introduce the code with descriptions, do not show any code other than the final randomized code. "
 
@@ -661,17 +663,10 @@ def get_query(user_selections):
     problem_type = "determine_output"
     required_structures, disallowed_structures, specifications = process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications)
     subject_request = process_user_selections_subjects(user_selections)
-    required_length, specifications = process_user_selections_problem_length(user_selections, specifications)
+    required_length, specifications = process_user_selections_problem_length(problem_type, user_selections, specifications)
 
     must_do = "-" + "\n-".join(static_variables.instructions[problem_type]["do"]) + "\n"
     must_not_do = "-" + "\n-".join(static_variables.instructions[problem_type]["do-not"]) + "\n"
-
-    # if problem_type in ["determine_output", "drag_and_drop"]:
-    #     must_do = "-" + "\n-".join(static_variables.instructions["code_mode_output"]["do"]) + "\n"
-    #     must_not_do = "-" + "\n-".join(static_variables.instructions["code_mode_output"]["do-not"]) + "\n"
-    # elif problem_type in ["fill_in_vars"]:
-    #     must_do = "-" + "\n-".join(static_variables.instructions["code_mode_completion"]["do"]) + "\n"
-    #     must_not_do = "-" + "\n-".join(static_variables.instructions["code_mode_completion"]["do-not"]) + "\n"
 
     constraints = " All of the requirements on this list must be met: \n" + must_do + required_structures + must_not_do + "-" + disallowed_structures
     full_query = static_variables.instructions["base_query"] + constraints + "\n-" + subject_request + "\n-" + required_length
@@ -798,7 +793,10 @@ def process_user_selections_structures_and_difficulty(problem_type, user_selecti
 
     #if difficulty < 1 or problem type is determine_output, disallow nested for loops
     if difficulty_level < 2 or problem_type == "determine_output":
-        disallowed_structures.append('nested for loops')
+        #disallowed_structures.append('nested for loops')
+        #disallowed_structures.append("for loops")
+        #disallowed_structures.append("while loops")
+        pass
 
     while difficulty_level > 0 and allowed_structures:
         chosen_index = random.randint(0,len(allowed_structures)-1)
@@ -824,7 +822,7 @@ def process_user_selections_structures_and_difficulty(problem_type, user_selecti
 
     return do, do_not, specifications
 
-def process_user_selections_problem_length(user_selections, specifications):
+def process_user_selections_problem_length(problem_type, user_selections, specifications):
     problem_length = int(user_selections['problem_length_slider'])
     #might want to adjust these values so the gap is relatively wider on lower lengths,
     #and relatively narrower on higher lengths (10-13 vs 120-130, for example)
@@ -832,7 +830,19 @@ def process_user_selections_problem_length(user_selections, specifications):
     base_end = 13
     mod1 = 0.5
     mod2 = 0.6
+
+    if problem_type == "determine_output":
+        #starting length: 3-
+        #ending length: 
+        base_start = 2
+        base_end = 4
+        mod1 = 1
+        mod2 = 1
+
+    #for non determine_output type problems: 5-55
     starting_length = int(base_start*problem_length*mod1)
+
+    #for non determine_output type problems: 7-85
     ending_length = int(base_end*problem_length*mod2)
 
     specifications["required_length"] = (starting_length, ending_length)
