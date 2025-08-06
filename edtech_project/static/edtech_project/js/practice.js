@@ -55,11 +55,22 @@ window.addEventListener('DOMContentLoaded', () => {
     });
 
 
-    // Check if any subjects selected
-    let selectedSubjects = getSelectedSubjects();
+    //if no subjects selected, select 'math' and 'computer science'
+    // let selectedSubjects = getSelectedSubjects();
+    // if (selectedSubjects.length === 0) {
+    //     ['computer-science', 'math'].forEach(id => {
+    //         const cb = document.getElementById(id);
+    //         if (cb) {
+    //             cb.checked = true;
+    //             checkboxStates[cb.value] = true;
+    //         }
+    //     });
+    //     localStorage.setItem('checkboxStates', JSON.stringify(checkboxStates));
+    //     selectedSubjects = ['computer-science', 'math'];
+    // }
 
-    // If none selected, default to computer science and math
-    if (selectedSubjects.length === 0) {
+    if (!localStorage.getItem('firstVisitDone')) {
+        // On first load, select math + computer science
         ['computer-science', 'math'].forEach(id => {
             const cb = document.getElementById(id);
             if (cb) {
@@ -68,7 +79,7 @@ window.addEventListener('DOMContentLoaded', () => {
             }
         });
         localStorage.setItem('checkboxStates', JSON.stringify(checkboxStates));
-        selectedSubjects = ['computer-science', 'math'];
+        localStorage.setItem('firstVisitDone', 'true'); // mark as initialized
     }
 
     // ----- no subject warning logic -----
