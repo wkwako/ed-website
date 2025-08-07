@@ -793,7 +793,7 @@ function generateExplanation() {
     let problemType = document.getElementById("problem-type").value;
     let correctAnswer = document.getElementById("correct-answer").value;
     let explanationSkeletonLoader = document.getElementById('explanation-skeleton-loader');
-    explanationSkeletonLoader.style.display = "inline-block";
+    explanationSkeletonLoader.style.display = "block";
 
     fetch("/practice/generate-explanation/", {
         method: "POST",

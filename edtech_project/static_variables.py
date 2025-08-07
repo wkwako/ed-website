@@ -64,6 +64,7 @@ instructions = {"base_query": "I\'d like you to generate a snippet of Python cod
                                                 "Do not include comments, annotations, or docstrings in the code.",
                                                 "Do not use any functions. Focus on a few lines that are difficult to interpret, but require little to no mental math. If the subject and domain is complex, use a few lines that you might see in such a program. E.x: if the subject is 'quantum mechanics', preference short code over code that is meaningful and accurate to quantum mechanics.",
                                                 "Do not use any complicated equations. Focus on the conceptual pieces and the 'spirit' of the subject and domain.",
+                                                "The answer cannot be null, or an empty string.",
                                                 ],
                 },
                 "fill_in_vars": {"do": ["Use i, j, and k for iterators in for loops.",

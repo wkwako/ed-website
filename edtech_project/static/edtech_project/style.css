@@ -249,6 +249,9 @@ input[type="range"] {
     font-size: 17px;
     margin: 0;
     padding: 0;
+    display: block;
+    white-space: pre-wrap;
+    word-wrap: break-word;
 }
 
 #hints code {
