@@ -9,3 +9,6 @@
 4. Reload website (using the reload button)
 
 -Pythonanywhere can only access a hardcoded list of universally whitelisted websites by default. Gatech.github.edu and api.openai.com are not on this list. I needed to sign up for a membership ($5/month) to access these sites. This access is automatic, so there isn't a separate whitelist file that needs to be added for this to work. Note that a new terminal needs to be created for this to take effect.
+
+to install a package on the web, do: source /home/wkwako/.virtualenvs/venv/bin/activate
+-then do pip install [package] as normal

@@ -249,6 +249,12 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
 
     //we received data
     .then(data => {
+
+        if (data.chatgpt_response === "Attempts exceeded.") {
+
+                return Promise.reject({ type: "attempts", message: "Attempts exceeded." });
+            }
+
         //info sent to user, no longer fetching request
         isFetching = false;
 
@@ -279,13 +285,6 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
 
         //we received data from chatgpt
         if (data.chatgpt_response) {
-
-            if (data.chatgpt_response === "Attempts exceeded.") {
-                return Promise.reject({ type: "attempts", message: "Attempts exceeded." });
-            }
-            
-
-
             document.getElementById("problem-type").value = data.problem_type;
             document.getElementById("correct-answer").value = data.correct_answer;
             chatResponseDiv.classList.remove("highlight-drag-and-drop");
@@ -491,6 +490,7 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
         if (error.type === "attempts") {
             userSubmit.style.display = "none";
             hintsGroup.style.display = "none";
+            hintsButton.style.display = "none";
             userInputDiv.style.display = "none";
             whyButton.style.display = "none";
             explanation.style.display = "none";
