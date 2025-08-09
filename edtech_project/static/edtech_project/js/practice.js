@@ -488,6 +488,7 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
     //there was an error retreiving data
     .catch(error => {
         if (error.type === "attempts") {
+            isFetching = false;
             userSubmit.style.display = "none";
             hintsGroup.style.display = "none";
             hintsButton.style.display = "none";
