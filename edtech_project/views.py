@@ -70,7 +70,7 @@ def practice(request):
             print ("Starting query loop...")
             result, problem_type, output, chatgpt_text = utilities.query_loop(user_selections)
             #result = False
-            print (f"Ending query loop... result was {result}")
+            print (f"Ending query loop... ")
 
             if not result:
                 return JsonResponse({
