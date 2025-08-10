@@ -246,7 +246,7 @@ def query_loop(user_selections):
     correct_answer = None
     attempts = 1
     print ("Starting verification loop...")
-    max_attempts = 3
+    max_attempts = 2
     while attempts <= max_attempts:
 
         #check for last attempt
