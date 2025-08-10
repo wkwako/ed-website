@@ -250,7 +250,7 @@ def query_loop(user_selections):
     while attempts <= max_attempts:
 
         #check for last attempt
-        if attempts == max_attempts - 1:
+        if attempts == max_attempts:
             last_attempt = True
 
         #check code against user specifications, send to anthropic if it fails to meet any
