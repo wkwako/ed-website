@@ -149,7 +149,7 @@ def check_length_specifications(problem_type, avg_length, cur_length):
 
     return (True, 0)
 
-def validate_against_user_selections(problem_type, specifications, chatgpt_text):
+def validate_against_user_selections(problem_type, specifications, chatgpt_text, last_attempt=False):
     #create new code string without docstrings to accurately measure num of code lines
     new_text = copy.deepcopy(chatgpt_text)
     if problem_type == "fill_in_vars":
@@ -178,6 +178,8 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
             should_include.append(key)
         elif value is True and key in specifications['disallowed_structures']:
             should_not_include.append(key)
+
+    info = [should_include, should_not_include, diff]
     
     structure_explanation = ""
     if should_include or should_not_include:
@@ -203,65 +205,108 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text)
         if problem_type == "determine_output":
             general_instructions += " Additionally, please ask yourself: could a user figure out what the code outputs by reading through the code in their head? If they cannot, change the problem and docstrings such that the user can do this in their head."
 
-        new_code = anthropic_query(general_instructions)
+
         print ("Code did not meet specifications for the following reasons: ")
         if length_explanation:
             print (length_explanation)
         if should_include:
             print (f"Code should have included structures but did not: {should_include}")
         if should_not_include:
-            print (f"Code should not have included structures but did: {should_not_include}")        
-        return False, new_code
+            print (f"Code should not have included structures but did: {should_not_include}")       
+
+        if last_attempt:
+            #use a better model if this is our last attempt
+            print ("Last attempt, using better model...")
+            new_code = anthropic_query(general_instructions, 0.5, "claude-3-7-sonnet-20250219")
+        
+        else:
+            new_code = anthropic_query(general_instructions)
+
+        return False, new_code, info
 
     #no issues with the code
-    return True, chatgpt_text
+    return True, chatgpt_text, info
 
 
 def query_loop(user_selections):
+    best_code = {}
     result = True
-    #1. get query
+
+    #get query
     print ("Getting first query...")
     problem_type, query, specifications = get_query(user_selections)
     #print (f"Full query: {query}")
 
-    #2. send query to chatgpt
+    #send query to chatgpt for the first time
     print ("Sending query to chatgpt...")
     chatgpt_text = chatgpt_query(query)
 
-    #3. check against user selections, get new code if necessary
-    # print ("Validating code against user selections...")
-    # code_unmodified, chatgpt_text = validate_against_user_selections(problem_type, specifications, chatgpt_text)
-
+    #initializing variables for loop
+    last_attempt = False
     correct_answer = None
-    attempts = 0
+    attempts = 1
     print ("Starting verification loop...")
-    max_attempts = 4
-    while attempts < max_attempts:
+    max_attempts = 3
+    while attempts <= max_attempts:
 
+        #check for last attempt
+        if attempts == max_attempts - 1:
+            last_attempt = True
+
+        #check code against user specifications, send to anthropic if it fails to meet any
         print ("Validating code against user selections...")
-        code_unmodified, chatgpt_text = validate_against_user_selections(problem_type, specifications, chatgpt_text)
+        code_unmodified, chatgpt_text, info = validate_against_user_selections(problem_type, specifications, chatgpt_text, last_attempt)
 
-        #4. run through safety checks and confirm code runs
+        #confirm code runs and is safe
         code_is_good, correct_answer, err_msg = validate(chatgpt_text)
 
-        #no issues
+        #code is safe and meets all user specifications. return it as is
         if code_is_good and code_unmodified:
             print ("Code is valid, returning...")
             break
 
-        #5. code did not run, send to anthropic and ask for a fix
-        if not code_is_good:
+        #code is valid but does not meet user specifications
+        if code_is_good:
+            print ("Storing code for later use...")
+            best_code = update_best_code(info, chatgpt_text, best_code, correct_answer)
+
+        #code is not valid (did not run); ask anthropic to fix it
+        else:
             print ("Exception in code, sending to anthropic for fix...")
             code_fix_query = f"There is an issue with this Python code: \n {chatgpt_text}.\n It is throwing this error: {err_msg}. Could you fix the error? Change only as much as you need to in order to fix the error. Do not add any comments or annotations to the code that do not already exist. Just reply with the code, do not introduce it or explain the fixes."
+            #TODO: if last attempt, should we call the better model?
             chatgpt_text = anthropic_query(code_fix_query)
-       
+
         #increment attempts
         attempts += 1
 
     if attempts >= max_attempts:
-        result = False
+        #pull best code here
+        chatgpt_text, correct_answer = best_code[max(best_code)]
+        #TODO: if code fails by x points or more, set to false?
+        result = True
+        print (f"Failed to generate code that met user specifications, best code was: {max(best_code)}")
 
     return result, problem_type, correct_answer, chatgpt_text
+
+
+def update_best_code(info, chatgpt_text, best_code, correct_answer):
+    #confidence starts at 0, and we subtract 1 for each structure that should have been included but
+    #wasn't/shouldn't have been included that was. every 4 lines over/under the limit subtracts a point
+    #the 'best' possible code is 0
+    #the best code in the dictionary will always be its max
+    should_include, should_not_include, diff = info
+    confidence = 0
+    confidence += -len(should_include) - len(should_not_include) - (abs(diff) // 4)
+
+    if confidence not in best_code:
+        best_code[confidence] = [chatgpt_text, correct_answer]
+
+    else:
+        #we don't care about ties, don't store this info
+        pass
+
+    return best_code
 
 def validate_safety_and_query(request, query, temperature, problem_type) -> tuple[bool, str, str, str]:
     """Queries ChatGPT, then validates the result. Output is a tuple of the form (bool, str, str, str), which maps to
