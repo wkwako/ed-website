@@ -72,10 +72,10 @@
                         <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="earth-science" id="earth-science"> </label> Earth science </div>
                         <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="computer-science" id="computer-science"> </label> Computer science </div>
                         <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="math" id="math"> </label> Math </div>
-                        <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="logic-and-reasoning" id="logic-and-reasoning"> </label> Logic and reasoning </div>
+                        <!-- <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="logic-and-reasoning" id="logic-and-reasoning"> </label> Logic and reasoning </div>
                         <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="linguistics" id="linguistics"> </label> Linguistics </div>
                         <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="geography" id="geography"> </label> Geography </div> 
-                        <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="medicine-anatomy" id="medicine-anatomy"> </label> Medicine/Antomy </div> 
+                        <div class="checkbox-row"> <label> <input type="checkbox" name="subject" value="medicine-anatomy" id="medicine-anatomy"> </label> Medicine/Antomy </div> -->
                     </div>
 
                     <!-- Advanced subjects column -->
@@ -158,7 +158,24 @@
     <div class="skeleton"></div>
     <div class="skeleton"></div>
 </div>
-<div id="instructions"></div> <br>
+
+<div id="instructions-container">
+    <div id="instructions">
+        <!-- Regular instructions go here-->
+    </div> 
+
+    <div id="instructions-example">
+        <br> See the
+        <a href="https://peps.python.org/pep-0257/" target="_blank" rel="noopener noreferrer" class="links">
+            PEP 257 Docstring Conventions
+        </a> 
+        for information on docstring structure, and hover over 
+        <a href="#" id="example-link">this link</a>
+        to see an example.
+        <img id="example-image" src="{% static 'edtech_project/docstring_examples.png' %}" alt="Example" style="display: none;">
+    </div>
+</div>
+
 
 <!--START CODE FROM CHATGPT-->
 <input type="hidden" id="difficulty" name="difficulty" value="">

@@ -22,6 +22,63 @@ const csrftoken = getCookie('csrftoken');
 
 window.addEventListener('DOMContentLoaded', () => {
 
+    const exampleSentence = document.getElementById('instructions-example'); // container with whole sentence
+    const exampleLink = document.getElementById('example-link'); // the "this link" anchor
+    const exampleImage = document.getElementById('example-image');
+
+    // Hover behavior for "this link"
+    exampleLink.addEventListener('mouseenter', () => {
+        const problemType = document.getElementById("problem-type").value;
+        if (problemType === "fill_in_vars") {
+            exampleImage.style.display = 'block';
+
+            const rect = exampleLink.getBoundingClientRect();
+            const offset = 10;
+
+            let left = rect.right + offset; // to the right of link
+            let top = rect.top;
+
+            const imgWidth = exampleImage.offsetWidth;
+            const imgHeight = exampleImage.offsetHeight;
+            const viewportWidth = window.innerWidth;
+            const viewportHeight = window.innerHeight;
+
+            // Keep inside viewport horizontally
+            if (left + imgWidth > viewportWidth) {
+                left = viewportWidth - imgWidth - offset;
+            }
+
+            // Keep inside viewport vertically
+            if (top + imgHeight > viewportHeight) {
+                top = viewportHeight - imgHeight - offset;
+            }
+            if (top < 0) {
+                top = offset;
+            }
+
+            exampleImage.style.left = left + 'px';
+            exampleImage.style.top = top + 'px';
+        }
+    });
+
+    exampleLink.addEventListener('mouseleave', () => {
+        exampleImage.style.display = 'none';
+    });
+
+    // Show/hide the whole sentence based on problem type
+    window.updateExampleLinkVisibility = function() {
+        const problemType = document.getElementById("problem-type").value;
+        if (problemType === "fill_in_vars") {
+            exampleSentence.style.display = 'block';  // show whole sentence
+        } else {
+            exampleSentence.style.display = 'none';   // hide whole sentence
+            exampleImage.style.display = 'none';      // hide image if open
+        }
+    };
+
+    // Initial check
+    updateExampleLinkVisibility();
+
     // ----- slider logic -----
     // difficulty slider
     const difficultySlider = document.getElementById('difficulty-slider');
@@ -124,11 +181,14 @@ function getSelectedSubjects() {
 //variable for submitSkeleton delay
 let loaderTimeout = null;
 
+
+
 //adds event listener for generation options panel to open when clicked
 if (!window.optionsButtonListenerAdded) {
     window.optionsButtonListenerAdded = true;
 
     document.addEventListener("DOMContentLoaded", function () {
+
         const button = document.getElementById('options-button');
         const panel = document.getElementById('generation-options-box');
 
@@ -184,6 +244,7 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
     let hints = document.getElementById("hints");
     let whyButton = document.getElementById("why-button");
     let explanation = document.getElementById("explanation");
+    const instructionsExample = document.getElementById('instructions-example');
 
     //setting defaults when button is clicked (removing submit and hint buttons, etc.)
     resetButton.style.visibility = 'hidden';
@@ -201,6 +262,7 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
     chatResponseDiv.contentEditable = "false";
     chatResponseDiv.autocomplete = "false";
     chatResponseDiv.spellcheck = false;
+    instructionsExample.style.display = 'none';
 
     const difficultySlider = document.getElementById('difficulty-slider');
     const problemLengthSlider = document.getElementById('problem-length-slider');
@@ -317,6 +379,7 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
             //if problem type is "fill_in_vars"
             
             else if (document.getElementById("problem-type").value === "fill_in_vars") {
+                updateExampleLinkVisibility();
                 let formattedResponse = data.chatgpt_response
                 //START CODE FROM CHATGPT
                 .replace(/```(\w+)?\n([\s\S]+?)```/g, function(match, lang, code) {
@@ -329,7 +392,7 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
                 chatResponseDiv.innerHTML = `<p><strong> </strong></p>` + formattedResponse;
                 document.getElementById("initial-response").value = chatResponseDiv.textContent;
                 document.getElementById("initial-response-raw").value = chatResponseDiv.innerHTML;
-                instructionsDiv.innerHTML = `Add docstrings to the code blocks above where indicted with triple quotation marks. Briefly summarize the code, then add parameters and return information. See the <a href="https://peps.python.org/pep-0257/" target="_blank" rel="noopener noreferrer" class="links">PEP 257 Docstring Conventions</a> for information on docstring structure. Note: phrasing differences are okay; the grader is lenient. Use the 'Reset Problem' button in the upper-right corner if you need to reload the original problem.`
+                instructionsDiv.innerHTML = `Add docstrings to the code blocks above where indicted with triple quotation marks. Briefly summarize the code, then add parameters and return information. Note: phrasing differences are okay; the grader is lenient. Use the 'Reset Problem' button in the upper-right corner if you need to reload the original problem.`
                 chatResponseDiv.contentEditable = "true";
                 userInput.style.display = "none";
                 userInputAnswer.style.display = "none";

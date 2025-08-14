@@ -125,6 +125,24 @@ def practice(request):
                 print (f'normalized correct answer: {output}')
                 request.session["correct_answer"] = output
 
+#             chatgpt_text = """```python
+# def add_numbers(a, b):
+#     \"\"\"Return the sum of two numbers.\"\"\"
+#     return a + b
+
+# def calculate_area(length, width):
+#     \"\"\"
+#     Calculate the area of a rectangle.
+
+#     Parameters:
+#         length (float): The rectangle's length.
+#         width (float): The rectangle's width.
+
+#     Returns:
+#         float: The calculated area.
+#     \"\"\"
+#     return length * width```"""
+
             #print (f'SENDING BACK CORRECT ANSWER AS: {output}')
             return JsonResponse({
                 "chatgpt_response": chatgpt_text,

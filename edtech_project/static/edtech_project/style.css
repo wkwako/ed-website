@@ -1,4 +1,3 @@
-
 /* Generation options panel headers and container */
 #generation-options-box {
     max-height: 0vh;
@@ -420,10 +419,51 @@ pre, pre code.language-python {
     font-weight: bold;
 }
 
+/* Instructions for user */
+
 #instructions {
     margin-top: 2%;
     font-family: Georgia;
     color: #e6fffb;
+}
+
+#instructions-container {
+    display: flex;
+    flex-direction: column;
+}
+
+#instructions-example {
+    position: relative;
+    color: #e6fffb;
+    font-family: Georgia;
+}
+
+#example-image {
+    position: fixed;
+    bottom: 100%; /* show above the cursor/link */
+    left: 0;
+    margin-bottom: 8px;
+    max-width: 500px; /* increase size */
+    width: auto;      /* maintain aspect ratio */
+    border: none;     /* remove white border */
+    background: none; /* remove background if any */
+    padding: 0;       /* remove extra padding */
+    box-shadow: 0 2px 5px rgba(0,0,0,0.2); /* optional, can remove if you want completely plain */
+}
+
+#example-link {
+    text-decoration: underline;
+    cursor: pointer;
+}
+
+#example-link:hover + #example-image {
+    display: block;
+}
+
+#instructions-example a:link,
+#instructions-example a:visited {
+    color: #e6fffb;
+    text-decoration: underline;
 }
 
 /* Start skeleton loader information */
