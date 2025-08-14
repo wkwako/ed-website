@@ -405,42 +405,78 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
                 if (!chatResponseDiv.hasAttribute("data-listener-attached")) {
                     chatResponseDiv.setAttribute("data-listener-attached", "true");
                     chatResponseDiv.addEventListener("keydown", function (event) {
+                        const selection = window.getSelection();
+                        if (!selection.rangeCount) return;
+                        const range = selection.getRangeAt(0);
+
+                        // Handle Enter key
                         if (event.key === "Enter") {
-                            // event.preventDefault(); // Prevents default <div> insertion
-                            // document.execCommand("insertLineBreak"); // Inserts a <br> instead
                             event.preventDefault();
-                            // br = document.createElement("br");
-                            const newline = document.createTextNode("\n");
-                            const selection = window.getSelection();
-                            if (!selection.rangeCount) return;
 
-                            const range = selection.getRangeAt(0);
-                            range.deleteContents();       // Remove any selected text (if any)
+                            // Get text from start to caret
+                            const preCaretRange = range.cloneRange();
+                            preCaretRange.selectNodeContents(chatResponseDiv);
+                            preCaretRange.setEnd(range.endContainer, range.endOffset);
+                            const textUpToCaret = preCaretRange.toString();
+
+                            // Determine indentation of previous line
+                            const lines = textUpToCaret.split("\n");
+                            const prevLine = lines[lines.length - 1];
+                            const indentMatch = prevLine.match(/^(\s*)/);
+                            const indent = indentMatch ? indentMatch[0] : "";
+
+                            // Insert newline + indent
+                            const newline = document.createTextNode("\n" + indent);
+                            range.deleteContents();
                             range.insertNode(newline);
-                            //range.insertNode(br);         // Insert the <br> exactly where the cursor is
 
-                            // Move the cursor (caret) after the inserted <br>
+                            // Move caret after inserted text
                             range.setStartAfter(newline);
                             range.setEndAfter(newline);
                             selection.removeAllRanges();
                             selection.addRange(range);
                         }
-                        //END CODE FROM CHATGPT
 
-                        if (event.key === "Tab") {
+                        // Handle Tab key
+                        else if (event.key === "Tab" && !event.shiftKey) {
                             event.preventDefault();
-                            const selection = window.getSelection();
-                            if (!selection.rangeCount) return;
-
-                            const range = selection.getRangeAt(0);
-                            const fourSpaces = document.createTextNode("    ");
+                            const tabSpaces = document.createTextNode("    ");
                             range.deleteContents();
-                            range.insertNode(fourSpaces);
-
-                            range.setStartAfter(fourSpaces);
-                            range.setEndAfter(fourSpaces);
+                            range.insertNode(tabSpaces);
+                            range.setStartAfter(tabSpaces);
+                            range.setEndAfter(tabSpaces);
                             selection.removeAllRanges();
                             selection.addRange(range);
+                        }
+
+                        // Handle Shift+Tab (remove up to 4 spaces or 1 tab from start of current line)
+                        else if (event.key === "Tab" && event.shiftKey) {
+                            event.preventDefault();
+
+                            // Get text from start of div to caret
+                            const preCaretRange = range.cloneRange();
+                            preCaretRange.selectNodeContents(chatResponseDiv);
+                            preCaretRange.setEnd(range.endContainer, range.endOffset);
+                            const textUpToCaret = preCaretRange.toString();
+
+                            const lines = textUpToCaret.split("\n");
+                            const currentLine = lines[lines.length - 1];
+
+                            // Remove up to 4 spaces worth from start of line
+                            let removeCount = 0;
+                            let removeChars = 0;
+                            for (let ch of currentLine) {
+                                if (removeCount >= 4) break;
+                                removeCount += (ch === "\t") ? 4 : 1;
+                                removeChars += 1;
+                            }
+
+                            if (removeChars > 0) {
+                                const lineStartRange = range.cloneRange();
+                                lineStartRange.setStart(range.endContainer, range.endOffset - currentLine.length);
+                                lineStartRange.setEnd(range.endContainer, range.endOffset - currentLine.length + removeChars);
+                                lineStartRange.deleteContents();
+                            }
                         }
                 });
             }

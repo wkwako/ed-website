@@ -436,6 +436,7 @@ pre, pre code.language-python {
     position: relative;
     color: #e6fffb;
     font-family: Georgia;
+    display: none;
 }
 
 #example-image {
