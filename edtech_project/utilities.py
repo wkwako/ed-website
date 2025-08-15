@@ -705,7 +705,7 @@ def get_query(user_selections):
     problem_types = ["determine_output", "fill_in_vars", "drag_and_drop",]
     problem_type = problem_types[random.randint(0, len(problem_types)-1)]
 
-    problem_type = "fill_in_vars"
+    #problem_type = "fill_in_vars"
     required_structures, disallowed_structures, specifications = process_user_selections_structures_and_difficulty(problem_type, user_selections, specifications)
     subject_request = process_user_selections_subjects(user_selections)
     required_length, specifications = process_user_selections_problem_length(problem_type, user_selections, specifications)

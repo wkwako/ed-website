@@ -392,7 +392,7 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
                 chatResponseDiv.innerHTML = `<p><strong> </strong></p>` + formattedResponse;
                 document.getElementById("initial-response").value = chatResponseDiv.textContent;
                 document.getElementById("initial-response-raw").value = chatResponseDiv.innerHTML;
-                instructionsDiv.innerHTML = `Add docstrings to the code blocks above where indicted with triple quotation marks. Briefly summarize the code, then add parameters and return information. Note: phrasing differences are okay; the grader is lenient. Use the 'Reset Problem' button in the upper-right corner if you need to reload the original problem.`
+                instructionsDiv.innerHTML = `Add docstrings to the code blocks above where indicted with triple quotation marks. Briefly summarize the code, adding parameter and return information if the code is sufficiently complex. Phrasing differences are okay; the grader is lenient. Use the 'Reset Problem' button in the upper-right corner if you need to reload the original problem.`
                 chatResponseDiv.contentEditable = "true";
                 userInput.style.display = "none";
                 userInputAnswer.style.display = "none";
