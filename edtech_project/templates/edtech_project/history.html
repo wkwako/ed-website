@@ -37,7 +37,6 @@
     {% for entry in history %}
         <p class="history-info">
             <!-- print general information about each problem -->
-            <!-- <strong> Difficulty: </strong> {{entry.difficulty}} &nbsp; <br> -->
             <strong> Result: </strong> 
             <!--START CODE FROM CHATGPT-->
             <span class="{% if entry.is_correct %}correct-text{% else %}incorrect-text{% endif %}"> 
@@ -45,7 +44,14 @@
             </span> <br>
             <!--END CODE FROM CHATGPT-->
             <strong> Problem type: </strong> {{entry.get_problem_type_display}} &nbsp; <br> <br>
-            <strong> Submitted code: </strong> <br> <br>
+
+            {% if entry.problem_type == "determine_output" %}
+                <strong> Problem code: </strong> <br> <br>
+            {% else %}
+                <strong> Submitted code: </strong> <br> <br>
+            {% endif %}
+
+            
 
         </p>
         <pre><code class="language-python" spellcheck="false" and autocomplete="off" onblur="hljs.highlightElement(this);">{{ entry.problem_text }}</code></pre>
