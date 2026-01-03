@@ -24,7 +24,6 @@ import aiohttp
 #TODO: make sure you've cited chatgpt correctly (and in the right spots)
 
 #TODO: problem type: multiple choice
-#TODO: problem type: re-arrange blocks of code to work
 #TODO: problem type: fix algorithmic error in standard CS algorithm
 
 #other ideas for problems:

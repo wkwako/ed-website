@@ -363,7 +363,7 @@ function fetchChatGPTResponse(retries=3, delay=1000) {
 
                 //set elements specific to "determine_output" problem type
                 chatResponseDiv.innerHTML = `<p><strong> </strong></p>` + formattedResponse;
-                instructionsDiv.innerHTML = "What printed value shows when the above code is ran? Remember that the 'output' variable is rounded to 3 decimals! Ex: 1.2468 -> 1.247"
+                instructionsDiv.innerHTML = "What printed value shows when the above code is ran? If the 'output' variable is a number, it is rounded to 3 decimals. Ex: 1.2468 -> 1.247"
                 userInput.setAttribute("required", "true");
                 userInput.style.display = "inline-block";
                 userInputAnswer.style.display = "inline-block";

@@ -218,6 +218,7 @@ def validate_against_user_selections(problem_type, specifications, chatgpt_text,
             #use a better model if this is our last attempt
             print ("Last attempt, using better model...")
             new_code = anthropic_query(general_instructions, 0.5, "claude-3-7-sonnet-20250219")
+            #new_code = anthropic_query(general_instructions, 0.5, "claude-sonnet-4")
         
         else:
             new_code = anthropic_query(general_instructions)
@@ -235,7 +236,7 @@ def query_loop(user_selections):
     #get query
     print ("Getting first query...")
     problem_type, query, specifications = get_query(user_selections)
-    #print (f"Full query: {query}")
+    print (f"Full query: {query}")
 
     #send query to chatgpt for the first time
     print ("Sending query to chatgpt...")
@@ -276,6 +277,7 @@ def query_loop(user_selections):
             code_fix_query = f"There is an issue with this Python code: \n {chatgpt_text}.\n It is throwing this error: {err_msg}. Could you fix the error? Change only as much as you need to in order to fix the error. Do not add any comments or annotations to the code that do not already exist. Just reply with the code, do not introduce it or explain the fixes."
             #TODO: if last attempt, should we call the better model?
             chatgpt_text = anthropic_query(code_fix_query)
+            #chatgpt_text = anthropic_query(code_fix_query, model="claude-sonnet-4")
 
         #increment attempts
         attempts += 1
@@ -725,8 +727,6 @@ def get_query(user_selections):
     print (f"disallowed structures: {disallowed_structures}")
 
     return problem_type, full_query, specifications
-
-
 
 # def get_query_old(difficultyLevel) -> tuple[str, str]:
 #     """Given the difficultyLevel, randomizes the kind of problem received and returns its query.

@@ -98,13 +98,72 @@
 /* Generation options panel contents */
 
 .options-panel-title {
+    position: relative;
     text-align: center;
     color: #e6fffb;
     font-size: 20px;
-    margin-bottom: 10px;
-    margin-top: 10px;
+    margin: 10px 0;
     font-family: Georgia;
 }
+
+.title-text {
+    display: inline-block;
+}
+
+.info-icon {
+    position: absolute;
+    left: 50%;
+    font-size: 17px;
+    color: #5b6564;
+    user-select: none;
+}
+
+#info-icon-subjects {
+    transform: translateX(calc(-100% - 57px)) translateY(3px);
+}
+
+#info-icon-structures {
+    transform: translateX(calc(-100% - 105px)) translateY(3px);
+}
+
+#info-icon-difficulty {
+    transform: translateX(calc(-100% - 60px)) translateY(3px);
+}
+
+#info-icon-problem-length {
+    transform: translateX(calc(-100% - 92px)) translateY(3px);
+}
+
+#info-icon-presets {
+    transform: translateX(calc(-100% - 50px)) translateY(3px);
+}
+
+.info-text {
+    display: none;
+    position: absolute;
+
+    background: #201019;
+    color: #e6fffb;
+    font-size: 14px;
+    line-height: 1.4;
+    padding: 8px 10px;
+    border-radius: 6px;
+    font-family: Georgia;
+    width: max-content;
+    max-width: 300px;
+
+    z-index: 10;
+    top: 100%;
+    left: 50%;
+    transform: translateX(-50%);
+    margin-top: 6px;
+}
+
+.info-icon:hover + .info-text,
+.info-icon:focus + .info-text {
+    display: block;
+}
+
 
 #structures {
     flex: 1;
