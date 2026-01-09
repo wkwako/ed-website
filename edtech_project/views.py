@@ -488,11 +488,12 @@ def generate_hint(request):
         elif problem_type == "fill_in_vars":
             query += " The goal of this coding assignment is for the student to add docstrings to the code describing what it does. To this end, they must understand the code to successfully write these docstrings. What one single tip would you give to this student that might help them understand the different functions and classes in the code? Do not give a generic hint like 'think about what each function is doing'. Do not directly tell them what the functions are doing, but guide them in the right direction."
         
-        query +=  " Do not include an intro to the tip, like, /'the tip I would suggest is:/'."
+        query +=  " Do not include an intro to the tip, like, /'the tip I would suggest is:/'. And do not mention the student. Just provide a hint as if you are talking to the student."
 
         temperature = 1
         hint = utilities.chatgpt_query(query, temperature)
         
+        #print (f"the hint is: {hint}")
         return JsonResponse({"success": True, "message": hint})
     
     return JsonResponse({"success": False, "error": "Request method was not POST"}, status=405)
@@ -525,6 +526,7 @@ def generate_explanation(request):
             explanation_focus = " Please focus your explanation on why the code produces this output."
 
         query += type_instructions + explanation_focus + instructions1 + restrictions1
+        query += "Do not introduce the explanation or mention the student."
 
         temperature = 0.3
         message = utilities.chatgpt_query(query, temperature)

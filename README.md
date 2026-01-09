@@ -63,56 +63,54 @@ To verify if code returned by an LLM runs, I use Python's built-in exec() functi
 In our case, the user is never able to write and execute their own code with any of the current problem types. Users don't have control over queries either, so exec() is safe.
 
 #### Prompt structure choices
-To provide the user as consistent an experience as possible, queries must be finely tuned to produce similarly-structured code with each generate. Even the shortest queries are several hundred words long, 
+Prompts are constructed modularly. A base query is defined and shared across all problem types, with additional constraints applied based on selected problem type and user specifications (subject, difficulty, etc.). The prompts primarly consist of explicit constraints in the form of "do" and "do not" instructions provided to the LLMs. 
 
-For example, the name of the variable users examine is always called "output". variable "output" is always used as the 
-
--even shortest prompts are several hundred words -> required for extreme consistency
--structured into "dos" and "donts" decreases chance for AI to hallucinate
-
+The structure reduces maintenance overhead and promotes consistency across generated problems. Additionally, expressing constraints as explicit guidelines rather than paragraph-style instructions helps reduce ambiguity and lowers the likelihood of undesired outputs or hallucinations.
 
 ## HCI Considerations
 
 #### Cognitive load
--problems should be able to be solved via mental math and calculations
--only one problem displayed at a time
--easily understandable
--structure of each problem is always similar. output variable always used, etc.
+The platform is designed to keep cognitive load intentionally low, while directing attention toward tasks that support learning code comprehension. To this end, the problems and UI follow these principles:
+1. Problems can be solved through mental execution rather than external tools
+2. Only one problem is presented at a time
+3. Each problem has a clear, recognizable goal
+4. Problem structure remains consistent within each problem type
+
+By minimizing variation and interface complexity, we ensure that cognitive effort are spent on understanding the code, rather than the surrounding environment or the instructions.
 
 #### Iterative design and feedback loops
--what feedback does the user receive?
--simple button depresses to error messages
--history section
+Feedback is given to the user in several ways, from intuitive button mapping, to receiving feedback on submitted answers. The following is a list of ways in which feedback loops are used:
+1. Familiar UI affordances, such as visual button state changes to confirm user input
+2. Immediate loading indicators when an action requires additional processing time
+3. A history page that allows users to review past problems and track progress
 
+These mappings set clear expectations for the user, and ensure every action is met with feedback.
 
 #### Transparency of model behavior
--we tell the user that a problem matching their specifications may be generated
--undersell so user doesn't feel deceived
--show user all error messages when something doesn't work
+The system is designed to be transparent, allowing users to understand its current state and predict how it will respond to actions. When errors or failure states occur, clear messages are presented to the user to explain what happened and how to respond. For example, users are notified that problems may generate that fail to meet their specifications. This transparency helps establish trust between the user and the system, even when edge cases arise.
 
 #### Choice of problem types and subjects
--focusing directly on code comprehension
--talk about each of the 3 problem types here and how they help
+Problem types are designed to specifically improve users' code comprehension skills. With that in mind, I designed and implemented 3 distinct problem types:
+1. "Determine the output." Users predict the value produced when a given block of code is executed.
+2. "Docstring writing." One or more functions are generated without explanatory text, and users are tasked with writing appropriate docstrings based on function behavior.
+3. "Rearranging code." A block of code is presented with lines out of order, requiring users to rearrange them into a valid, executable sequence.
+
+Across all problem types, users engage primarily in interpreting and reasoning about existing code, rather than producing original implementions. This ensures that the focus remains on code comrprehension as opposed to synthesis.
 
 #### How UI choices affect model perception
+The UI is designed to be as simple and navigable. In addition, the barrier to using the webapp is low; users are not required to be logged in to generate problems. The webapp has many features that support learning and mitigate distractions:
+1. The UI is simple, with no clutter
+2. The webapp can be used without an account
+3. There are no popups
+4. Each generated problem is centered
+5. UI buttons are static
 
-The UI is designed to be as simple and navigable is possible. The barrier to entry is low; users are not required to log in to generate problems, 
-
-The UI is as simple as possible to keep user focus on coding problems.
--very simple UI
--can be used without a login
--no pop up windows
--nothing clouding screen
--screen is focused
--UI buttons do not jump around
--not glamorous, but fast, usable, and reliable
-
-#### Aligning System Behavior with User Expectations
--again, undersell so user doesn't feel deceived
-
+The above features contribute to the perception of a UI that is fast, usable, and reliable.
 
 ## Future Work
--accuracy, subject variety, complexity
--more languages
--more safety features: currently using exec(), etc.
--caching, bulk querying, sharding, load balancing
+The following is a list of features either currently in development, or is planned for future versions:
+1. **The accuracy and complexity of generated code.** The larger the number of constraints, the higher the likelihood of LLMs failing to generate code that matches user-defined specifications. Additional features that raise accuracy would be helpful to improve system stability and precision.
+2. **Additional problem types.** The aforementioned problem types each contribute to the improving users' code comprehension skills. Additional types would be helpful to provide a more robust learning process.
+3. **Boost backend efficiency.** Backend efficiency could be improved by implementing several features, such as caching, bulk querying, reducing redundant generation, and consolidating validation steps.
+4. **Additional languages.** Expanding to Java, C++, C#, JavaScript, and C, would help the webapp reach a wider audience and appeal.
+5. **Gamification features.** Adding features like expanded progress tracking, leaderboards, or achievements, would increase user engagement.
