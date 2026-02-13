@@ -16,6 +16,7 @@ import anthropic
 import copy
 from . import static_variables
 from contextlib import redirect_stdout
+import openai
 
 #START CODE FROM CHATGPT
 def detect_structures(code: str):
@@ -360,35 +361,28 @@ def validate_safety_and_query(request, query, temperature, problem_type) -> tupl
 
 
 def chatgpt_query(query, temperature=0.5, raw_response=False, model="gpt-4.1-mini"):
-    """Given a query and a temperature, queries ChatGPT. If raw_response is True,
-       returns the unprocessed ChatGPT response. If raw_request is False, returns
-       only the text content of the ChatGPT response.
+    """Given a query and a temperature, queries ChatGPT via OpenAI SDK.
+       If raw_response is True, returns the unprocessed ChatGPT response object.
+       If raw_response is False, returns only the text content of the ChatGPT response.
     """
-    #API endpoint
-    url = "https://api.openai.com/v1/chat/completions"
+    response = openai.responses.create(
+        model=model,
+        input=query,
+        temperature=temperature
+    )
 
-    #request headers
-    headers = {
-        "Content-Type": "application/json",
-        "Authorization": f"Bearer {settings.SECRET_KEY}"
-    }
+    if raw_response:
+        return response
 
-    #data
-    data = {
-        "model": model,
-        "messages": [{"role": "user", "content": query}],
-        "temperature": temperature
-    }
+    # Extract text content exactly like your old code
+    # response.output is a list of objects with 'content' lists
+    # Each content item is a dict with 'type' and 'text'
+    try:
+        chatgpt_text = response.output[0].content[0].text
+    except (IndexError, AttributeError):
+        chatgpt_text = "No response"
 
-    #does the API request
-    chatgpt_response = requests.post(url, headers=headers, json=data)
-    
-    if not raw_response:
-        response_data = chatgpt_response.json()
-        chatgpt_text = response_data.get("choices", [{}])[0].get("message", {}).get("content", "No response")
-        return chatgpt_text
-
-    return chatgpt_response
+    return chatgpt_text
 
 def anthropic_query(query, temperature=0.5, model="claude-3-5-haiku-20241022"):
     #https://docs.anthropic.com/en/docs/about-claude/models/overview
