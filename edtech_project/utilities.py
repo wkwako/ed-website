@@ -365,6 +365,10 @@ def chatgpt_query(query, temperature=0.5, raw_response=False, model="gpt-4.1-min
        If raw_response is True, returns the unprocessed ChatGPT response object.
        If raw_response is False, returns only the text content of the ChatGPT response.
     """
+
+    openai.api_key = settings.SECRET_KEY
+
+
     response = openai.responses.create(
         model=model,
         input=query,
