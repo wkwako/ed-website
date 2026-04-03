@@ -368,7 +368,6 @@ def chatgpt_query(query, temperature=0.5, raw_response=False, model="gpt-4.1-min
 
     openai.api_key = settings.SECRET_KEY
 
-
     response = openai.responses.create(
         model=model,
         input=query,
@@ -388,13 +387,15 @@ def chatgpt_query(query, temperature=0.5, raw_response=False, model="gpt-4.1-min
 
     return chatgpt_text
 
-def anthropic_query(query, temperature=0.5, model="claude-3-5-haiku-20241022"):
+def anthropic_query(query, temperature=0.5, model="claude-haiku-4-5-20251001"):
     #https://docs.anthropic.com/en/docs/about-claude/models/overview
     #https://www.anthropic.com/pricing#api
     role = "You are a computer science teacher."
 
     client = anthropic.Anthropic()
     client.api_key = settings.ANTHROPIC_KEY
+
+    print ("reached1")
 
     message = client.messages.create(
         model=model,
@@ -413,6 +414,9 @@ def anthropic_query(query, temperature=0.5, model="claude-3-5-haiku-20241022"):
             }
         ]
     )
+
+    print ("reached2")
+
     return message.content[0].text
 
 

@@ -7,6 +7,7 @@
 2. Add/commit/push changes to branch
 3. From pythonanywhere bash console, 'git pull origin develop' to get changes. Make sure to cd into CS6460-project first. May need to do 'git reset --hard' first
 4. Reload website (using the reload button)
+5. may need to do :wq
 
 -Pythonanywhere can only access a hardcoded list of universally whitelisted websites by default. Gatech.github.edu and api.openai.com are not on this list. I needed to sign up for a membership ($5/month) to access these sites. This access is automatic, so there isn't a separate whitelist file that needs to be added for this to work. Note that a new terminal needs to be created for this to take effect.
 
