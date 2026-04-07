@@ -21,7 +21,6 @@ import aiohttp
 #TODO: make spacing between task bar items flexible
 #TODO: on create account page, should center more stuff. round boxes, etc.
 #TODO: add options page/section for users
-#TODO: make sure you've cited chatgpt correctly (and in the right spots)
 
 #TODO: problem type: multiple choice
 #TODO: problem type: fix algorithmic error in standard CS algorithm
