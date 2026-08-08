@@ -5,7 +5,7 @@
 
 ## Introduction
 
-I developed a web application that aims to improve students’ code reading abilities by generating practice problems for students to solve. Rather than asking students to write code themselves, my project creates problems that rely on a student’s code comprehension ability. The webapp was created with HTML, CSS, Javascript, and Python, and models by OpenAI and Anthropic are used to generate problems of varying types. An options panel gives users agency over several aspects of problem generation including syntax, topic, and problem length. API calls are made to OpenAI’s GPT 4.1-mini model and Anthropic’s Claude 3.5 Haiku model for problem generation. Before code is shown to users, I verify that it is safe to run, and use the ast python package to confirm it contains user-selected structures. Specifically, OpenAI’s model is used for initial problem generation, and Anthropic’s model is used to regenerate the problem should it fail to meet user specifications.
+I developed a web application that aims to improve students’ code reading abilities by generating practice problems for students to solve. Rather than asking students to write code themselves, my project creates problems that rely on a student’s code comprehension ability. The webapp was created with HTML, CSS, Javascript, and Python, and models by OpenAI and Anthropic are used to generate problems of varying types. An options panel gives users agency over several aspects of problem generation including syntax, topic, and problem length. API calls are made to OpenAI’s GPT 4.1-mini model and Anthropic’s Claude 4.5 Haiku model for problem generation. Before code is shown to users, I verify that it is safe to run, and use the ast python package to confirm it contains user-selected structures. Specifically, OpenAI’s model is used for initial problem generation, and Anthropic’s model is used to regenerate the problem should it fail to meet user specifications.
 
 #### Focus on introductory CS students
 
@@ -20,7 +20,7 @@ The frontend uses HTML, CSS, and Javascript to display and catch user actions, w
 3. The backend randomly selects a problem type to generate: "determine the output", "docstring writing", or "rearrange the code."
 4. The backend creates the query for the LLM. The user's specifications are converted to strings, concatenated, and formed into a list of "dos" and "donts" for the LLM. In addition, instructions are added to the query specific to the problem type.
 5. The query is sent to ChatGPT, which generates a block of code formatted as a string.
-6. When we receieve a response, we perform a validation step. This includes verifying that the code runs without errors, and confirming that it contains the user-defined specifications.
+6. When we receive a response, we perform a validation step. This includes verifying that the code runs without errors, and confirming that it contains the user-defined specifications.
 7. At this point, we store information about the problem, such as the problem type, difficulty, generated structures, and the answer.
 8. The code is sent back to the frontend, and is displayed to the user.
 
@@ -30,7 +30,7 @@ Lastly, depending on the problem type, the user has different ways of submitting
 
 There are several points at which the previously enumerated data flow may fail. These include:
 1. The response from the backend may be in the wrong format (not POST). This is resolved by immediately sending another request to the backend.
-2. We response from ChatGPT fails, either due to an error message, or a timeout. This is resolved by immediately sending another request to ChatGPT.
+2. The response from ChatGPT fails, either due to an error message, or a timeout. This is resolved by immediately sending another request to ChatGPT.
 3. During the code validation step, we may discover that the code has an error. In this case, we capture the error message, and send the code and its error message to Anthropic to be fixed.
 4. During the code validation step, we may discover that the code fails to meet user specifications. In this case, we send the code along with its faults back to ChatGPT and ask for it to be fixed. If the code fails for a second time to meet user specifications, we try a last time, but use a more robust model.
 
@@ -55,12 +55,12 @@ I built the frontend using HTML, CSS and Javascript. To accelerate development a
 Python is widely accessible, approachable, and is becoming more popular with the rise of AI. And most importantly, Python is my strongest language. I can reliably test my webapp, determine the quality of generated code, and its usefulness and functionality. 
 
 #### Latency and cost vs quality and accuracy
-Sending queries to LLMs and receiving responses takes resources: latency, and cost. Each query takes several seconds and costs ~a tenth of a cent. If code valiation fails, we need to re-query the LLM. Each additional query gets us closer to the desired code, but worsens the user experience. As such, we cap the number of queries at three, and display the closest matching code to the user if all three queries fail. The tradeoff is that the user may receive code they weren't expecting, but I determined that receive code that was *close* is better than returning no code and an error message.
+Sending queries to LLMs and receiving responses takes resources: latency, and cost. Each query takes several seconds and costs ~a tenth of a cent. If code valiation fails, we need to re-query the LLM. Each additional query gets us closer to the desired code, but worsens the user experience. As such, we cap the number of queries at two, and display the closest matching code to the user if both queries fail. The tradeoff is that the user may receive code they weren't expecting, but I determined that receive code that was *close* is better than returning no code and an error message.
 
 #### Exec() versus standalone environments
-To verify if code returned by an LLM runs, I use Python's built-in exec() function, which directly executes the code. The output is read via the stdout() function from io, which is then stored and later used to check the user's submitted answer. exec() is known for being a potentially unsafe function to run, because it has no built-in safety checks. If a user can write and execute their own code in exec(), it can harm other users and irreparably damage data. To mitigate these risks, code is often run in isolated environments to prevent users maliciously accessing sensitive data. The tradeoff for safer code is a steeper learning curve, with slightly slower run times. exec() is typically faster, easier to set up, and requires no extra packages.
+To verify if code returned by an LLM runs, I use Python's built-in exec() function, which directly executes the code. The output is read via the stdout() function from io, which is then stored and later used to check the user's submitted answer. exec() is known for being a potentially unsafe function to run because it has no built-in safety checks. If a user can write and execute their own code in exec(), it can harm other users and irreparably damage data. To mitigate these risks, code is often run in isolated environments to prevent users maliciously accessing sensitive data. The tradeoff for safer code is a steeper learning curve, with slightly slower run times. exec() is typically faster, easier to set up, and requires no extra packages.
 
-In our case, the user is never able to write and execute their own code with any of the current problem types. Users don't have control over queries either, so exec() is safe.
+In our case, the user cannot write queries, and can only run modifications of code that is known to be safe. For additional safety however, we implement an AST layer that inspects these modifications -- blocking dangerous calls, imports, and infinite loops -- before execution. Although exec() is safe with this setup, for real production I'd use use a sandbox environment with resource limits.
 
 #### Prompt structure choices
 Prompts are constructed modularly. A base query is defined and shared across all problem types, with additional constraints applied based on selected problem type and user specifications (subject, difficulty, etc.). The prompts primarly consist of explicit constraints in the form of "do" and "do not" instructions provided to the LLMs. 
@@ -76,7 +76,7 @@ The platform is designed to keep cognitive load intentionally low, while directi
 3. Each problem has a clear, recognizable goal
 4. Problem structure remains consistent within each problem type
 
-By minimizing variation and interface complexity, we ensure that cognitive effort are spent on understanding the code, rather than the surrounding environment or the instructions.
+By minimizing variation and interface complexity, we ensure that cognitive efforts are spent on understanding the code, rather than the surrounding environment or the instructions.
 
 #### Iterative design and feedback loops
 Feedback is given to the user in several ways, from intuitive button mapping, to receiving feedback on submitted answers. The following is a list of ways in which feedback loops are used:
@@ -95,7 +95,7 @@ Problem types are designed to specifically improve users' code comprehension ski
 2. "Docstring writing." One or more functions are generated without explanatory text, and users are tasked with writing appropriate docstrings based on function behavior.
 3. "Rearranging code." A block of code is presented with lines out of order, requiring users to rearrange them into a valid, executable sequence.
 
-Across all problem types, users engage primarily in interpreting and reasoning about existing code, rather than producing original implementions. This ensures that the focus remains on code comrprehension as opposed to synthesis.
+Across all problem types, users engage primarily in interpreting and reasoning about existing code, rather than producing original implementations. This ensures that the focus remains on code comprehension as opposed to synthesis.
 
 #### How UI choices affect model perception
 The UI is designed to be as simple and navigable. In addition, the barrier to using the webapp is low; users are not required to be logged in to generate problems. The webapp has many features that support learning and mitigate distractions:

@@ -17,16 +17,16 @@ import copy
 import asyncio
 import aiohttp
 
-#STUFF TO FIX:
-#TODO: make spacing between task bar items flexible
-#TODO: on create account page, should center more stuff. round boxes, etc.
-#TODO: add options page/section for users
-
-#TODO: problem type: multiple choice
-#TODO: problem type: fix algorithmic error in standard CS algorithm
-
-#other ideas for problems:
-#3. chatgpt generates incorrect code, user must find the error(s) in the code
+#idea list:
+#1. make spacing between task bar items flexible
+#2. on create account page, should center more stuff. round boxes, etc.
+#3. : add options page/section for users
+#4. : problem type: multiple choice
+#5. : problem type: fix algorithmic error in standard CS algorithm
+#6. : create a "code base" problem type that generates a ton of code,
+#then asks the user to do something with it (fill in doc, solve problem, etc.)
+#this one could involve writing code
+#7. generates incorrect code, user must find the error(s) in the code
 
 def home(request):
     """Returns the home page, home.html."""
