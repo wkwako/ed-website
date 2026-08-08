@@ -386,7 +386,7 @@ def check_answer_drag_and_drop(request):
             utilities.store_in_db(request, current_user, final_code, True, problem_type, initial_chatGPTResponse)
             return JsonResponse({"success": True, "message": "Correct!"})
         
-        #stores the problem in the db
+        #accept any ordering that produces the correct output, like cosmetic reorderings (variable declarations, etc.
         utilities.store_in_db(request, current_user, final_code, True, problem_type, initial_chatGPTResponse)
         return JsonResponse({"success": True, "message": "Correct!"})
     
