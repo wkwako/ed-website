@@ -39,35 +39,15 @@ def practice(request):
         try:
             request.session["correct_answer"] = None
             body = json.loads(request.body)
-            #query = body.get("message", "An error has occurred when generating the query.")
-            #temperature = 1.0
-            #difficultyLevel = body.get('difficulty_level', 'undefined')
-            #print (difficultyLevel)
 
             user_selections = body.get('user_selections', None)
 
             user_selections = utilities.check_for_no_subjects(user_selections)
-            #print (f"USER_SELECTIONS: {user_selections}")
 
-
-            #problem_type,query = utilities.get_query(difficultyLevel, user_selections)
-            #problem_type, query, specifications = utilities.get_query(user_selections)
-            #print (f'FULL QUERY: {query}')
-            #print (f'SPECIFICATIONS: {specifications}')
-            #set problem text to None
             request.session["problem_text"] = None
-
-            #query chatgpt and validate its response
-            #result, chatgpt_text, err, output = utilities.validate_safety_and_query(request, query, temperature, problem_type)
-
-            #print (f"Example correct answer before modifications: {chatgpt_text}")
-            #print (f'Specifications: {specifications}')
-
-            #code_unmodified, chatgpt_text = utilities.validate_against_user_selections(problem_type, specifications, chatgpt_text)
 
             print ("Starting query loop...")
             result, problem_type, output, chatgpt_text = utilities.query_loop(user_selections)
-            #result = False
             print (f"Ending query loop... ")
 
             if not result:
@@ -78,7 +58,6 @@ def practice(request):
 
             if chatgpt_text[-3:] != "```":
                 chatgpt_text += "```"
-
 
             request.session["problem_text"] = chatgpt_text
 
@@ -123,6 +102,7 @@ def practice(request):
                 print (f'normalized correct answer: {output}')
                 request.session["correct_answer"] = output
 
+#dummy example for debugging
 #             chatgpt_text = """```python
 # def add_numbers(a, b):
 #     \"\"\"Return the sum of two numbers.\"\"\"
@@ -141,7 +121,6 @@ def practice(request):
 #     \"\"\"
 #     return length * width```"""
 
-            #print (f'SENDING BACK CORRECT ANSWER AS: {output}')
             return JsonResponse({
                 "chatgpt_response": chatgpt_text,
                 "problem_type": problem_type,
@@ -159,6 +138,7 @@ def practice(request):
         except Exception as exception:
             msg = str(exception)
             code = hasattr(exception, 'response')
+
     #if not a POST request, render the home page template normally
     return render(request, 'edtech_project/practice.html')
 
@@ -254,19 +234,13 @@ def safety_checks(user_input, initial_chatGPTResponse):
     except:
         return False, "Error analyzing code"
     #END CODE FROM CHATGPT
-    
-    #checks for calls to internal variables that should not be accessed
-    # if "__" in user_input:
-    #     return False, "Double underscores detected, please rename your variables"
-    
+
     #checks for infinite loops
     #START CODE FROM 'python_user' on stackoverflow: https://stackoverflow.com/questions/67230018/python-checking-its-own-code-before-running-usage-errors
     if isinstance(node, ast.While) and isinstance(node.test, ast.Constant) and node.test.value is True:
         #END CODE FROM 'python_user' on stackoverflow: https://stackoverflow.com/questions/67230018/python-checking-its-own-code-before-running-usage-errors
         return False, "Error: infinite loop detected"
     
-    
-
     #checks for total line difference between user's answer and original problem
     #need to take this line out. instead, find where line differences start and stop. make sure all the new ones are strings
     
@@ -366,36 +340,12 @@ def check_answer_fill_in_vars(request):
         query = f"I gave a student this block of python code: {initial_chatGPTResponse}. The goal is for them to add docstrings to the code that make sense and adhere to the PEP8 style conventions. I would like you to analyze how they did. Here is the finished code they submitted: {user_input}. Please grade leniently, but accurately. Do not grade on small formatting issues, like whitespace. Please output ONLY \"Correct\"' if the docstrings correctly summarize each function/class, and \"Incorrect.\" if not. ONLY judge the docstring content, not the function content. If the answer is Incorrect, please provide a short hint (1-2 short sentences) for the student about what they got wrong, but without explicitely giving them the answer (i.e. telling them what the function does). Do not introduce the hint with \"Hint\", just provide it after \"Incorrect.\". Do not mention the student in the hint. The first word of your response MUST be either \"Correct\" or \"Incorrect.\""
         temperature = 0.3
 
-        #query_test = asyncio.run(utilities.double_query("Please output the words, \"this is a test\""))
-        #print (f'QUERY TEST IS: {query_test}')
-        #return JsonResponse({"success": True, "message": query_test[0] + query_test[1]})
-
         replies = asyncio.run(utilities.double_query(query, temperature))
 
         is_user_correct = replies[1] == "Correct"
         reply = replies[1]
         
-        # is_user_correct = (replies[0] == "Correct") and (replies[1] == "Correct")
-        # if not is_user_correct:
-        #     if replies[1][:2] == "In":
-
-        #         reply = replies[1]
-        #     else:
-        #         reply = replies[0]
-
-        # else:
-        #     reply = "Correct"
-
-        # print (f'CHATGPT RESPONSE: {replies[0]}')
-        # print (f'ANTHROPIC RESPONSE: {replies[1]}')
-        # print (f'REPLY: {reply}')
-
         print (f'REPLIES: {replies}')
-
-        # reply = utilities.chatgpt_query(query, temperature)
-        # is_user_correct = reply == "Correct"
-
-        
 
         #need to ask chatGPT to generate correct_code
         current_user = request.user
@@ -439,27 +389,6 @@ def check_answer_drag_and_drop(request):
         #stores the problem in the db
         utilities.store_in_db(request, current_user, final_code, True, problem_type, initial_chatGPTResponse)
         return JsonResponse({"success": True, "message": "Correct!"})
-
-        # try:
-        #     f = StringIO()
-        #     with redirect_stdout(f):
-        #         print ("inside stdout")
-        #         local_vars = {}
-        #         print ("about to run exec()")
-        #         exec(final_code, local_vars, local_vars)
-        #         output = f.getvalue()
-
-        #         print (f'correct answer: {correct_answer}')
-        #         print (f'user answer: {output}')
-
-        #         if output == correct_answer:
-        #             return JsonResponse({"success": True, "message": "Correct!"})
-
-        # except:
-        #     return JsonResponse({"success": True, "message": "Incorrect"})
-
-        
-
     
     return JsonResponse({"success": False, "error": "Reqeuest method was not POST"}, status=405)
 
