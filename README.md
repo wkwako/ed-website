@@ -7,6 +7,8 @@
 
 I developed a web application that aims to improve students’ code reading abilities by generating practice problems for students to solve. Rather than asking students to write code themselves, my project creates problems that rely on a student’s code comprehension ability. The webapp was created with HTML, CSS, Javascript, and Python, and models by OpenAI and Anthropic are used to generate problems of varying types. An options panel gives users agency over several aspects of problem generation including syntax, topic, and problem length. API calls are made to OpenAI’s GPT 4.1-mini model and Anthropic’s Claude 4.5 Haiku model for problem generation. Before code is shown to users, I verify that it is safe to run, and use the ast python package to confirm it contains user-selected structures. Specifically, OpenAI’s model is used for initial problem generation, and Anthropic’s model is used to regenerate the problem should it fail to meet user specifications.
 
+The webapp is available here: https://wkwako.pythonanywhere.com/ (may take several seconds to load on first visit)
+
 #### Focus on introductory CS students
 
 I focus on a system geared specifically towards introductory CS students. The gap between teaching materials for writing code versus reading and tracing through code starts early. Starting computer science with a stronger foundation will contribute to future aptitude. 
