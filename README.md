@@ -50,8 +50,8 @@ Flask is typically used for smaller web projects, and Django and used for larger
 #### ChatGPT and Anthropic versus other LLMs
 ChatGPT's and Anthropic's APIs are straightforward to call, with clear documentation and transparent pricing schemes. They also offer multiple models that can be called depending on use case. For example, I call more robust and pricier models if the cheaper ones aren't doing the job.
 
-#### "Vibe coding" web development
-I built the frontend using HTML, CSS and Javascript. To accelerate development and implement more complex functionality, I collaborated with LLM tools like ChatGPT to generate JavaScript code. I iteratively tested, debugged, and adapted the provided code to ensure it aligned with my vision. While using ChatGPT allowed me to build features faster and focus on the overall product, I was mindful that it offered less opportunity to deepen my JavaScript skills on every line of code
+#### AI-assisted development
+I used LLM tools throughout the frontend and for parts of the backend, the same way they're used on production teams: to draft boilerplate, explore unfamiliar APIs, and get a first pass at frontend features. Everything AI-generated went through the same loop as my own code: read it, test it in the browser, trace the data flow against the backend contract, and rewrite what didn't fit. The result was faster iteration on the product without giving up understanding of any code path a user can reach.
 
 #### Why the webapp generates Python instead of other languages
 Python is widely accessible, approachable, and is becoming more popular with the rise of AI. And most importantly, Python is my strongest language. I can reliably test my webapp, determine the quality of generated code, and its usefulness and functionality. 
